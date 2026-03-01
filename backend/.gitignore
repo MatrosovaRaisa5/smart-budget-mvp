@@ -3,8 +3,8 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.env
 
-### STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -13,13 +13,11 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
 .idea
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +27,25 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
 .vscode/
+
+
+backend/target/
+backend/*.log
+backend/.idea/
+backend/*.iml
+backend/.vscode/
+
+mobile_app/.dart_tool/
+mobile_app/.idea/
+mobile_app/.vscode/
+mobile_app/build/
+mobile_app/android/app/build/
+mobile_app/ios/Flutter/Generated.xcconfig
+mobile_app/ios/Flutter/flutter_export_environment.sh
+mobile_app/ios/Pods/
+mobile_app/ios/.symlinks/
+mobile_app/pubspec.lock
+
+
+*_data/

@@ -6,72 +6,55 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tbank.smart_budget_backend.model.Budget;
 import com.tbank.smart_budget_backend.model.Category;
-import com.tbank.smart_budget_backend.model.Transaction;
-import com.tbank.smart_budget_backend.repository.DataStore;
+import com.tbank.smart_budget_backend.model.User;
+import com.tbank.smart_budget_backend.repository.BudgetRepository;
+import com.tbank.smart_budget_backend.repository.UserRepository;
 
 @Service
 public class BudgetService {
+    private final UserRepository userRepository;
+    private final BudgetRepository budgetRepository;
 
-    private final DataStore dataStore;
-
-    public BudgetService(DataStore dataStore) {
-        this.dataStore = dataStore;
+    public BudgetService(UserRepository userRepository, BudgetRepository budgetRepository) {
+        this.userRepository = userRepository;
+        this.budgetRepository = budgetRepository;
     }
 
-    // Сохраняем настройки бюджета
-    public String setupBudget(Long userId, Double income, Map<Category, Double> percentages) {
-        // Проверяем, что сумма процентов равна 100% (1.0)
+    @Transactional
+    public String setupBudget(String email, Double income, Map<Category, Double> percentages) {
         double totalPercent = percentages.values().stream().mapToDouble(Double::doubleValue).sum();
         if (Math.abs(totalPercent - 1.0) > 0.001) {
-            return "ОШИБКА: Сумма процентов должна быть 100%";
+            return "Ошибка: Сумма процентов должна быть 100%";
         }
 
-        Budget budget = dataStore.getBudget(userId);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Budget budget = user.getBudget();
+        if (budget == null) {
+            budget = new Budget();
+            budget.setUser(user);
+            user.setBudget(budget);
+        }
         budget.setMonthlyIncome(income);
         budget.setPercentages(percentages);
-        // Сбрасываем потраченное, если меняем бюджет
-        budget.setSpent(new HashMap<>());
-        dataStore.saveBudget(userId, budget);
+        budget.setSpent(new HashMap<>()); // сброс трат при изменении бюджета
+        budgetRepository.save(budget);
         return "OK: Бюджет сохранен";
     }
 
-    // Обрабатываем новую транзакцию (имитация из внешнего API)
-    public void processTransaction(Transaction transaction) {
-        // Простейшая классификация по словам в описании
-        String desc = transaction.getDescription().toLowerCase();
-        Category cat = Category.OTHER;
-        if (desc.contains("продукт") || desc.contains("магазин") || desc.contains("еда")) cat = Category.GROCERIES;
-        else if (desc.contains("жкх") || desc.contains("квартплата")) cat = Category.UTILITIES;
-        else if (desc.contains("кино") || desc.contains("кафе") || desc.contains("ресторан")) cat = Category.ENTERTAINMENT;
-        else if (desc.contains("такси") || desc.contains("метро") || desc.contains("бензин")) cat = Category.TRANSPORT;
-        else if (desc.contains("копилка") || desc.contains("вклад")) cat = Category.SAVINGS;
-
-        transaction.setCategory(cat);
-        dataStore.addTransaction(transaction);
-
-        // Обновляем потраченные суммы в бюджете
-        Budget budget = dataStore.getBudget(1L); // Для пользователя с ID 1
-        if (budget.getSpent() != null) {
-            Double currentSpent = budget.getSpent().getOrDefault(cat, 0.0);
-            budget.getSpent().put(cat, currentSpent + transaction.getAmount());
-        } else {
-            Map<Category, Double> spentMap = new HashMap<>();
-            spentMap.put(cat, transaction.getAmount());
-            budget.setSpent(spentMap);
-        }
-    }
-
-    // Получить статус бюджета (сколько потрачено, сколько осталось)
-    public Map<String, Object> getBudgetStatus(Long userId) {
-        Budget budget = dataStore.getBudget(userId);
+    public Map<String, Object> getBudgetStatus(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Budget budget = user.getBudget();
         Map<String, Object> result = new HashMap<>();
-        result.put("income", budget.getMonthlyIncome());
+        result.put("income", budget != null ? budget.getMonthlyIncome() : 0);
 
         Map<String, Map<String, Double>> categoriesStatus = new HashMap<>();
-        if (budget.getPercentages() != null) {
+        if (budget != null && budget.getPercentages() != null) {
             for (Map.Entry<Category, Double> entry : budget.getPercentages().entrySet()) {
                 String catName = entry.getKey().toString();
                 Double percent = entry.getValue();
@@ -83,7 +66,7 @@ public class BudgetService {
                 catData.put("limit", limit);
                 catData.put("spent", spent);
                 catData.put("remaining", remaining);
-                catData.put("percent", percent * 100); // в процентах для удобства
+                catData.put("percent", percent * 100);
                 categoriesStatus.put(catName, catData);
             }
         }
@@ -91,11 +74,12 @@ public class BudgetService {
         return result;
     }
 
-    // Проверка на превышение лимитов
-    public List<String> checkAlerts(Long userId) {
+    public List<String> checkAlerts(String email) {
         List<String> alerts = new ArrayList<>();
-        Budget budget = dataStore.getBudget(userId);
-        if (budget.getPercentages() == null || budget.getSpent() == null) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Budget budget = user.getBudget();
+        if (budget == null || budget.getPercentages() == null || budget.getSpent() == null) {
             return alerts;
         }
 
@@ -106,9 +90,9 @@ public class BudgetService {
             if (limit > 0) {
                 double percentSpent = spent / limit * 100;
                 if (percentSpent >= 100) {
-                    alerts.add("⚠️ Лимит по категории " + cat + " ИСЧЕРПАН!");
+                    alerts.add("Лимит по категории " + cat + " ИСЧЕРПАН!");
                 } else if (percentSpent >= 80) {
-                    alerts.add("⚠️ Вы потратили " + String.format("%.0f", percentSpent) + "% бюджета на " + cat);
+                    alerts.add("Вы потратили " + String.format("%.0f", percentSpent) + "% бюджета на " + cat);
                 }
             }
         }
