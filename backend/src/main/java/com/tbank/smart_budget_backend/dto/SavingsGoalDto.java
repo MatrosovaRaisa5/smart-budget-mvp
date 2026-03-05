@@ -13,3 +13,4 @@ public class SavingsGoalDto {
     private Double targetAmount;
     private Double savedAmount; // 0 по умолчанию
 }
+

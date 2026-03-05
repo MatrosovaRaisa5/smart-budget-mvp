@@ -12,3 +12,4 @@ public class TransactionDto {
     @NotBlank
     private String description;
 }
+

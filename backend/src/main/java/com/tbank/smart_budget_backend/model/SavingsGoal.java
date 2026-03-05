@@ -27,3 +27,4 @@ public class SavingsGoal {
     @JoinColumn(name = "user_id")
     private User user;
 }
+

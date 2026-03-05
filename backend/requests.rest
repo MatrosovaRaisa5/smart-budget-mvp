@@ -1,0 +1,42 @@
+@baseUrl = http://localhost:8080
+
+### Регистрация
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user666@example.com",
+  "password": "111111111",
+  "name": "rtyui"
+}
+
+### Логин
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user666@example.com",
+  "password": "111111111"
+}
+
+### Настройка бюджета
+POST {{baseUrl}}/api/budget/setup
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyNjY2QGV4YW1wbGUuY29tIiwiaWF0IjoxNzcyNjQ3MjI3LCJleHAiOjE3NzI3MzM2Mjd9.0Qkfq0quAY3KF9yQ8xWBtWVwGxJwMswU4kq9pIfE5Xs
+Content-Type: application/json
+
+{
+  "income": 50000,
+  "percentages": {
+    "GROCERIES": 0.25,
+    "UTILITIES": 0.15,
+    "ENTERTAINMENT": 0.10,
+    "TRANSPORT": 0.10,
+    "SAVINGS": 0.20,
+    "OTHER": 0.20
+  }
+}
+
+### Статус бюджета
+GET {{baseUrl}}/api/budget/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyNjY2QGV4YW1wbGUuY29tIiwiaWF0IjoxNzcyNjQ3MjI3LCJleHAiOjE3NzI3MzM2Mjd9.0Qkfq0quAY3KF9yQ8xWBtWVwGxJwMswU4kq9pIfE5Xs

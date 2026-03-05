@@ -9,3 +9,4 @@ import com.tbank.smart_budget_backend.model.Transaction;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findByUserId(Long userId);
 }
+

@@ -9,3 +9,4 @@ import com.tbank.smart_budget_backend.model.SavingsGoal;
 public interface SavingsGoalRepository extends JpaRepository<SavingsGoal, Long> {
     List<SavingsGoal> findByUserId(Long userId);
 }
+
