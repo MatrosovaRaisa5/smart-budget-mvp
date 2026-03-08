@@ -13,6 +13,7 @@ import com.tbank.smart_budget_backend.repository.UserRepository;
 
 @Service
 public class SavingsGoalService {
+
     private final UserRepository userRepository;
     private final SavingsGoalRepository goalRepository;
 
@@ -29,6 +30,7 @@ public class SavingsGoalService {
         goal.setName(dto.getName());
         goal.setTargetAmount(dto.getTargetAmount());
         goal.setSavedAmount(dto.getSavedAmount() != null ? dto.getSavedAmount() : 0.0);
+        goal.setDeadline(dto.getDeadline());
         goal.setUser(user);
         return goalRepository.save(goal);
     }
@@ -53,6 +55,7 @@ public class SavingsGoalService {
         if (dto.getSavedAmount() != null) {
             goal.setSavedAmount(dto.getSavedAmount());
         }
+        goal.setDeadline(dto.getDeadline());
         return goalRepository.save(goal);
     }
 
@@ -67,5 +70,17 @@ public class SavingsGoalService {
         }
         goalRepository.delete(goal);
     }
-}
 
+    @Transactional
+    public SavingsGoal addContribution(String email, Long goalId, Double amount) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        SavingsGoal goal = goalRepository.findById(goalId)
+                .orElseThrow(() -> new RuntimeException("Goal not found"));
+        if (!goal.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+        goal.setSavedAmount(goal.getSavedAmount() + amount);
+        return goalRepository.save(goal);
+    }
+}

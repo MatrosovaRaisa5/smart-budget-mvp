@@ -1,16 +1,11 @@
 package com.tbank.smart_budget_backend.dto;
 
-import java.util.Map;
-
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
-public class BudgetSetupDto {
+public class ContributionDto {
     @NotNull @Positive
-    private Double plannedIncome;
-
-    @NotNull
-    private Map<Long, Double> percentages;
+    private Double amount;
 }
