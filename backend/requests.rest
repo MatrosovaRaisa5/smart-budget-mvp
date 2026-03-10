@@ -28,7 +28,7 @@ GET {{baseUrl}}/categories
 Authorization: Bearer {{authToken}}
 
 ### Создать новую категорию (пользовательскую)
-POST {{baseUrl}}/categories?name=Вкусняшки
+POST {{baseUrl}}/categories?name=Путешествие
 Authorization: Bearer {{authToken}}
 
 ### Установить бюджет (проценты указываются как числа от 0 до 100)
@@ -37,7 +37,7 @@ Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "plannedIncome": 80000,
+  "plannedIncome": 130000,
   "percentages": {
     "1": 40,
     "2": 20,
@@ -61,7 +61,7 @@ Content-Type: application/json
 
 {
   "source": "Зарплата",
-  "amount": 80000,
+  "amount": 130000,
   "date": "05.03.2026"
 }
 
@@ -75,8 +75,8 @@ Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "amount": 3500.75,
-  "description": "Ужин в кафе",
+  "amount": 1670.75,
+  "description": "Додо-пицца",
   "categoryId": 3,
   "date": "08.03.2026"
 }

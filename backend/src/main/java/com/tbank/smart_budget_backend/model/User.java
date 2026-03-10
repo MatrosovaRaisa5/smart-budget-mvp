@@ -2,7 +2,7 @@ package com.tbank.smart_budget_backend.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,13 +32,16 @@ public class User {
 
     private String name;
 
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Budget budget;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<SavingsGoal> savingsGoals = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Transaction> transactions = new ArrayList<>();
 }
-
