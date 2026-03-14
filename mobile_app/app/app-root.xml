@@ -1,0 +1,2 @@
+<!-- app/app-root.xml -->
+<Frame id="root-frame" defaultPage="components/Welcome" />

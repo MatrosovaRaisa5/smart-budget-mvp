@@ -1,5 +1,6 @@
-import { createApp } from 'nativescript-vue'
+// app/app.ts
+import { createApp } from 'nativescript-vue';
+import CategorySelector from './components/CategorySelector.vue';
 
-import Home from './components/Home.vue'
-
-createApp(Home).start()
+// ТОЛЬКО ТАК РАБОТАЕТ
+createApp(CategorySelector).start();
