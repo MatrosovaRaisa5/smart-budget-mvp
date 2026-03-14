@@ -1,30 +1,22 @@
 package com.tbank.smart_budget_backend.controller;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.tbank.smart_budget_backend.dto.ContributionDto;
 import com.tbank.smart_budget_backend.dto.SavingsGoalDto;
 import com.tbank.smart_budget_backend.model.SavingsGoal;
 import com.tbank.smart_budget_backend.service.SavingsGoalService;
-
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/goals")
 @CrossOrigin(origins = "*")
 public class SavingsGoalController {
+
     private final SavingsGoalService goalService;
 
     public SavingsGoalController(SavingsGoalService goalService) {
@@ -59,5 +51,13 @@ public class SavingsGoalController {
         goalService.deleteGoal(email, goalId);
         return ResponseEntity.ok("Goal deleted");
     }
-}
 
+    @PostMapping("/{goalId}/contributions")
+    public ResponseEntity<SavingsGoal> addContribution(@AuthenticationPrincipal UserDetails userDetails,
+                                                       @PathVariable Long goalId,
+                                                       @Valid @RequestBody ContributionDto dto) {
+        String email = userDetails.getUsername();
+        SavingsGoal updatedGoal = goalService.addContribution(email, goalId, dto.getAmount());
+        return ResponseEntity.ok(updatedGoal);
+    }
+}

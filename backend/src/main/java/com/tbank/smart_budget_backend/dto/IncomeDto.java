@@ -4,21 +4,18 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
-public class SavingsGoalDto {
-    @NotBlank
-    private String name;
+public class IncomeDto {
+    private String source;
 
     @NotNull @Positive
-    private Double targetAmount;
+    private Double amount;
 
-    private Double savedAmount; // опционально, по умолчанию 0
-
+    @NotNull
     @JsonFormat(pattern = "dd.MM.yyyy")
-    private LocalDate deadline;
+    private LocalDate date;
 }

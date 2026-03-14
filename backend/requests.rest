@@ -1,42 +1,140 @@
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:8080/api
 
-### Регистрация
-POST {{baseUrl}}/api/auth/register
+### Регистрация нового пользователя
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "user666@example.com",
-  "password": "111111111",
-  "name": "rtyui"
+  "email": "test1@example.com",
+  "password": "secret123",
+  "name": "Иван Петров"
 }
 
-### Логин
+### Логин (получение JWT)
 # @name login
-POST {{baseUrl}}/api/auth/login
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "user666@example.com",
-  "password": "111111111"
+  "email": "test1@example.com",
+  "password": "secret123"
 }
 
-### Настройка бюджета
-POST {{baseUrl}}/api/budget/setup
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyNjY2QGV4YW1wbGUuY29tIiwiaWF0IjoxNzcyNjQ3MjI3LCJleHAiOjE3NzI3MzM2Mjd9.0Qkfq0quAY3KF9yQ8xWBtWVwGxJwMswU4kq9pIfE5Xs
+### Сохраняем токен из ответа
+@authToken = {{login.response.body.token}}
+
+### Получить все доступные категории (глобальные + пользовательские)
+GET {{baseUrl}}/categories
+Authorization: Bearer {{authToken}}
+
+### Создать новую категорию (пользовательскую)
+POST {{baseUrl}}/categories?name=Путешествие
+Authorization: Bearer {{authToken}}
+
+### Установить бюджет (проценты указываются как числа от 0 до 100)
+POST {{baseUrl}}/budget/setup
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "income": 50000,
+  "plannedIncome": 130000,
   "percentages": {
-    "GROCERIES": 0.25,
-    "UTILITIES": 0.15,
-    "ENTERTAINMENT": 0.10,
-    "TRANSPORT": 0.10,
-    "SAVINGS": 0.20,
-    "OTHER": 0.20
+    "1": 40,
+    "2": 20,
+    "3": 40
   }
 }
+// Предполагается, что ID категорий: 1 - Продукты, 2 - Транспорт, 3 - Кафе
 
-### Статус бюджета
-GET {{baseUrl}}/api/budget/status
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyNjY2QGV4YW1wbGUuY29tIiwiaWF0IjoxNzcyNjQ3MjI3LCJleHAiOjE3NzI3MzM2Mjd9.0Qkfq0quAY3KF9yQ8xWBtWVwGxJwMswU4kq9pIfE5Xs
+### Получить статус бюджета (где главный экран)
+GET {{baseUrl}}/budget/status
+Authorization: Bearer {{authToken}}
+
+### Получить уведомления
+GET {{baseUrl}}/budget/alerts
+Authorization: Bearer {{authToken}}
+
+### Добавить доход
+POST {{baseUrl}}/incomes
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "source": "Зарплата",
+  "amount": 130000,
+  "date": "05.03.2026"
+}
+
+### Получить все доходы
+GET {{baseUrl}}/incomes
+Authorization: Bearer {{authToken}}
+
+### Добавить транзакцию (расход)
+POST {{baseUrl}}/transactions
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "amount": 1670.75,
+  "description": "Додо-пицца",
+  "categoryId": 3,
+  "date": "08.03.2026"
+}
+
+### Получить историю транзакций с фильтром по дате и категории
+GET {{baseUrl}}/transactions?fromDate=01.03.2026&toDate=10.03.2026&categoryId=3
+Authorization: Bearer {{authToken}}
+
+### Создать цель
+POST {{baseUrl}}/goals
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Новый телефон",
+  "targetAmount": 50000,
+  "savedAmount": 0,
+  "deadline": "31.12.2026"
+}
+
+### Получить все цели
+GET {{baseUrl}}/goals
+Authorization: Bearer {{authToken}}
+
+### Пополнить цель (добавить к накопленной сумме)
+POST {{baseUrl}}/goals/1/contributions
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "amount": 5000
+}
+
+### Получить профиль пользователя
+GET {{baseUrl}}/users/profile
+Authorization: Bearer {{authToken}}
+
+### Обновить имя в профиле
+PUT {{baseUrl}}/users/profile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Пётр Иванов"
+}
+
+### Удалить транзакцию (по ID)
+DELETE {{baseUrl}}/transactions/1
+Authorization: Bearer {{authToken}}
+
+### Удалить доход (по ID)
+DELETE {{baseUrl}}/incomes/1
+Authorization: Bearer {{authToken}}
+
+### Удалить цель (по ID)
+DELETE {{baseUrl}}/goals/1
+Authorization: Bearer {{authToken}}
+
+### Удалить свой аккаунт (!!!!!!!безвозвратно!!!!!!!)
+DELETE {{baseUrl}}/users/account
+Authorization: Bearer {{authToken}}

@@ -1,5 +1,7 @@
 package com.tbank.smart_budget_backend.model;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,9 +24,9 @@ public class SavingsGoal {
     private String name;
     private Double targetAmount;
     private Double savedAmount;
+    private LocalDate deadline; // дата, до которой копим
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 }
-
