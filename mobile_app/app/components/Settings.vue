@@ -884,10 +884,7 @@ export default defineComponent({
                     percentages: percentages
                 });
 
-                $navigateTo(MyBudget, {
-                    transition: { name: 'slideLeft', duration: 300 },
-                    clearHistory: true
-                });
+                $navigateBack();
 
             } finally {
                 this.isSaving = false;
