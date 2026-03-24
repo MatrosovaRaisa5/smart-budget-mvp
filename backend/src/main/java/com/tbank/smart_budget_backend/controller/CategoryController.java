@@ -53,4 +53,18 @@ public class CategoryController {
         CategoryDto dto = new CategoryDto(category.getId(), category.getName(), false);
         return ResponseEntity.ok(dto);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCategory(@AuthenticationPrincipal UserDetails userDetails,
+                                            @PathVariable Long id) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        if (category.getUser() == null || !category.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+        categoryRepository.delete(category);
+        return ResponseEntity.ok("Category deleted");
+    }
 }
