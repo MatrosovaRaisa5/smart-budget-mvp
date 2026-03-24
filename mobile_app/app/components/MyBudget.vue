@@ -1,42 +1,48 @@
 <template>
-    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="page-my-budget">
+    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="page-my-budget" @loaded="onPageLoaded" @resumed="onPageResumed">
         <GridLayout rows="*" columns="*" backgroundColor="#13131A">
-            
+
+            <!-- Индикатор загрузки -->
+            <GridLayout v-if="isLoading" row="0" col="0" rows="*" columns="*"
+                       backgroundColor="#13131A" zIndex="2000">
+                <ActivityIndicator :busy="true" color="#964BDC" width="50" height="50" />
+            </GridLayout>
+
             <!-- СЛОЙ 1: ОСНОВНОЙ КОНТЕНТ (САМЫЙ НИЗ) -->
-            <ScrollView row="0" col="0">
+            <ScrollView v-else row="0" col="0">
                 <FlexboxLayout flexDirection="column" alignItems="stretch" paddingLeft="16" paddingRight="16">
-                    
+
                     <!-- Верхняя панель с заголовком и настройками -->
                     <GridLayout rows="auto" columns="*, auto" marginTop="16">
-                        <Label col="0" text="Мой бюджет" 
-                               class="budget-title" 
+                        <Label col="0" text="Мой бюджет"
+                               class="budget-title"
                                horizontalAlignment="left" />
-                        
-                        <Image col="1" src="~/assets/images/settings.png" 
-                               width="22" height="22" 
+
+                        <Image col="1" src="~/assets/images/settings.png"
+                               width="22" height="22"
                                horizontalAlignment="right"
                                @tap="goToSettings" />
                     </GridLayout>
-                    
+
                     <!-- БЛОК ПРЕДУПРЕЖДЕНИЙ (показываем только если есть) -->
-                    <StackLayout v-if="hasWarnings" marginTop="24" backgroundColor="#2F2D44" borderRadius="16" 
+                    <StackLayout v-if="hasWarnings" marginTop="24" backgroundColor="#2F2D44" borderRadius="16"
                                 :paddingRight="showAllWarnings ? 16 : 0" paddingLeft="16" paddingTop="16" paddingBottom="16">
-                        
+
                         <!-- Заголовок с предупреждениями -->
                         <GridLayout rows="auto" columns="auto, auto, *" marginBottom="16" :paddingRight="showAllWarnings ? 0 : 16">
-                            <Label col="0" text="Предупреждения" 
+                            <Label col="0" text="Предупреждения"
                                    class="warnings-title" />
-                            
-                            <Label col="1" :text="warningsCount.toString()" 
-                                   class="warnings-count" 
+
+                            <Label col="1" :text="warningsCount.toString()"
+                                   class="warnings-count"
                                    marginLeft="8" />
-                            
-                            <Label col="2" :text="showAllWarnings ? 'Скрыть' : 'Все'" 
-                                   class="warnings-all" 
+
+                            <Label col="2" :text="showAllWarnings ? 'Скрыть' : 'Все'"
+                                   class="warnings-all"
                                    horizontalAlignment="right"
                                    @tap="toggleWarningsView" />
                         </GridLayout>
-                        
+
                         <!-- Горизонтальный скролл с предупреждениями (по умолчанию) -->
                         <ScrollView v-if="!showAllWarnings" orientation="horizontal" height="auto">
                             <FlexboxLayout flexDirection="row">
@@ -44,14 +50,14 @@
                                            class="warning-card"
                                            width="250"
                                            marginRight="8">
-                                    
+
                                     <GridLayout rows="auto" columns="*, auto" width="100%">
-                                        <Label col="0" :text="warning.text + ' ' + warning.category" 
+                                        <Label col="0" :text="warning.text + ' ' + warning.category"
                                                class="warning-text"
-                                               textWrap="true" 
+                                               textWrap="true"
                                                width="220" />
-                                        
-                                        <Image col="1" src="~/assets/images/close.png" 
+
+                                        <Image col="1" src="~/assets/images/close.png"
                                                width="8" height="8"
                                                verticalAlignment="top"
                                                marginLeft="8"
@@ -61,20 +67,20 @@
                                 </StackLayout>
                             </FlexboxLayout>
                         </ScrollView>
-                        
+
                         <!-- Вертикальный список предупреждений (при нажатии на "Все") -->
                         <ScrollView v-else orientation="vertical" height="auto">
                             <StackLayout>
                                 <StackLayout v-for="warning in warnings" :key="warning.id"
                                            class="warning-card-vertical"
                                            marginBottom="8">
-                                    
+
                                     <GridLayout rows="auto" columns="*, auto" width="100%">
-                                        <Label col="0" :text="warning.text + ' ' + warning.category" 
+                                        <Label col="0" :text="warning.text + ' ' + warning.category"
                                                class="warning-text-vertical"
                                                textWrap="true" />
-                                        
-                                        <Image col="1" src="~/assets/images/close.png" 
+
+                                        <Image col="1" src="~/assets/images/close.png"
                                                width="8" height="8"
                                                verticalAlignment="top"
                                                marginLeft="8"
@@ -85,179 +91,159 @@
                             </StackLayout>
                         </ScrollView>
                     </StackLayout>
-                    
+
                     <!-- БЛОК ДОХОДОВ (показываем только если есть доходы) -->
-                    <StackLayout v-if="hasIncomes" marginTop="16" backgroundColor="#2F2D44" borderRadius="16" 
+                    <StackLayout v-if="hasIncomes" marginTop="16" backgroundColor="#2F2D44" borderRadius="16"
                                 paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16">
-                        
+
                         <!-- Заголовок -->
-                        <Label text="Доходы в этом месяце" 
-                               class="income-title" 
+                        <Label :text="'Доходы в ' + currentMonth"
+                               class="income-title"
                                marginBottom="16" />
-                        
+
                         <!-- Картинка и общая сумма доходов -->
                         <GridLayout rows="auto" columns="auto, *" marginBottom="16">
-                            <Image col="0" src="~/assets/images/money.png" 
-                                   width="48" height="48" 
+                            <Image col="0" src="~/assets/images/money.png"
+                                   width="48" height="48"
                                    horizontalAlignment="left" />
-                            
+
                             <StackLayout col="1" marginLeft="16" verticalAlignment="center">
-                                <Label :text="formatAmount(totalIncome) + ' ₽'" 
+                                <Label :text="formatAmount(totalIncome) + ' ₽'"
                                        class="income-amount" />
-                                <Label :text="totalIncomeSources + ' ' + getSourceWord(totalIncomeSources)" 
+                                <Label :text="totalIncomeSources + ' ' + getSourceWord(totalIncomeSources)"
                                        class="income-source" />
                             </StackLayout>
                         </GridLayout>
-                        
-                        <!-- Список доходов (каждый доход - отдельный источник) -->
-                        <StackLayout v-if="incomes.length > 0">
-                            <StackLayout v-for="income in incomes" :key="income.id"
-                                       class="income-item"
-                                       marginBottom="16">
-                                <GridLayout rows="auto" columns="*, auto" width="100%">
-                                    <Label col="0" :text="formatAmount(income.amount) + ' ₽'" 
-                                           class="income-item-amount" />
-                                </GridLayout>
-                            </StackLayout>
-                        </StackLayout>
-                        
-                        <!-- Кнопка Добавить доход с ОТСТУПОМ 16 от списка -->
-                        <Button text="Добавить доход" 
+
+                        <!-- Кнопка Добавить доход -->
+                        <Button text="Добавить доход"
                                class="income-button"
-                               marginTop="0"
                                @tap="addIncome" />
                     </StackLayout>
-                    
+
                     <!-- БЛОК РАСХОДОВ (показываем только если есть расходы) -->
-                    <StackLayout v-if="hasExpenses" marginTop="16" backgroundColor="#2F2D44" borderRadius="16" 
+                    <StackLayout v-if="hasExpenses" marginTop="16" backgroundColor="#2F2D44" borderRadius="16"
                                 paddingLeft="16" paddingRight="16" paddingTop="16" marginBottom="100">
-                        
+
                         <!-- Заголовок -->
-                        <Label text="Расходы в этом месяце" 
-                               class="expense-title" 
+                        <Label text="Расходы в этом месяце"
+                               class="expense-title"
                                marginBottom="16" />
-                        
+
                         <!-- Список расходов -->
                         <StackLayout v-for="expense in expenses" :key="expense.id"
                                    class="expense-item"
                                    marginBottom="16">
-                            
+
                             <!-- Верхняя часть с категорией и суммой -->
                             <GridLayout rows="auto" columns="auto, *, auto" marginBottom="12">
-                                <Image col="0" :src="'~/assets/images/' + expense.icon + '.png'" 
-                                       width="48" height="48" 
+                                <Image col="0" :src="'~/assets/images/' + expense.icon + '.png'"
+                                       width="48" height="48"
                                        horizontalAlignment="left" />
-                                
+
                                 <StackLayout col="1" marginLeft="8" verticalAlignment="center">
-                                    <Label :text="expense.category" 
+                                    <Label :text="expense.category"
                                            class="expense-category" />
-                                    <Label :text="expense.transactionCount + ' ' + getTransactionWord(expense.transactionCount)" 
+                                    <Label :text="expense.transactionCount + ' ' + getTransactionWord(expense.transactionCount)"
                                            class="expense-transactions" />
                                 </StackLayout>
-                                
+
                                 <StackLayout col="2" verticalAlignment="center">
-                                    <Label :text="'Потрачено ' + expense.spentPercent + '%'" 
-                                           class="expense-percent" 
+                                    <Label :text="'Потрачено ' + expense.spentPercent + '%'"
+                                           class="expense-percent"
                                            textAlignment="right" />
-                                    <Label :text="'Осталось ' + formatAmount(expense.remainingAmount) + ' ₽'" 
-                                           class="expense-remaining" 
+                                    <Label :text="'Осталось ' + formatAmount(expense.remainingAmount) + ' ₽'"
+                                           class="expense-remaining"
                                            textAlignment="right" />
                                 </StackLayout>
                             </GridLayout>
-                            
+
                             <!-- Статус бар на всю ширину -->
                             <GridLayout rows="auto" columns="*" height="3">
                                 <!-- Фон статус бара (вся ширина) -->
                                 <GridLayout col="0" backgroundColor="#969696" height="3" width="100%" />
                                 <!-- Заполнение статус бара (слева) -->
-                                <GridLayout col="0" :backgroundColor="getStatusBarColor(expense.spentPercent)" 
-                                           :width="expense.spentPercent + '%'" height="3" 
+                                <GridLayout col="0" :backgroundColor="getStatusBarColor(expense.spentPercent)"
+                                           :width="expense.spentPercent + '%'" height="3"
                                            horizontalAlignment="left" />
                             </GridLayout>
                         </StackLayout>
-                        
+
                         <!-- Кнопка Добавить трату -->
-                        <Button text="Добавить трату" 
+                        <Button text="Добавить трату"
                                class="expense-button"
                                @tap="addExpense" />
                     </StackLayout>
-                    
-                    <!-- Пустой контент (когда нет данных) -->
-                    <FlexboxLayout v-if="!hasIncomes && !hasExpenses" flexDirection="column" justifyContent="center" alignItems="center" 
-                                  height="100%" minHeight="500">
-                        <!-- Ничего не отображаем, только всплывающее окно -->
-                    </FlexboxLayout>
-                    
+
                     <!-- Дополнительный отступ снизу для удобства скролла -->
                     <StackLayout height="40" />
-                    
+
                 </FlexboxLayout>
             </ScrollView>
-            
+
             <!-- СЛОЙ 2: МЕНЮ (ПОВЕРХ ОСНОВНОГО КОНТЕНТА) -->
-            <Menu row="0" col="0" 
+            <Menu row="0" col="0"
                   verticalAlignment="bottom"
-                  :activeTab="activeTab" 
+                  :activeTab="activeTab"
                   @update:activeTab="activeTab = $event"
                   zIndex="1" />
-            
+
             <!-- СЛОЙ 3: ЗАТЕМНЯЮЩИЙ ФОН (ПОВЕРХ МЕНЮ) - показываем только если нет данных -->
-            <GridLayout v-if="showPopup && !hasIncomes && !hasExpenses" row="0" col="0" rows="*" columns="*" 
+            <GridLayout v-if="showPopup && !hasIncomes" row="0" col="0" rows="*" columns="*"
                        backgroundColor="#818181" opacity="0.64"
                        @tap="closePopup"
                        zIndex="1000" />
-            
+
             <!-- СЛОЙ 4: МОДАЛЬНОЕ ОКНО (САМЫЙ ВЕРХ) - показываем только если нет данных -->
-            <GridLayout v-if="showPopup && !hasIncomes && !hasExpenses" row="0" col="0" rows="auto" columns="auto" 
+            <GridLayout v-if="showPopup && !hasIncomes" row="0" col="0" rows="auto" columns="auto"
                        horizontalAlignment="center" verticalAlignment="center"
                        @tap="closePopup"
                        zIndex="1001">
-                <StackLayout backgroundColor="white" borderRadius="15" 
-                            paddingLeft="20" paddingRight="20" 
+                <StackLayout backgroundColor="white" borderRadius="15"
+                            paddingLeft="20" paddingRight="20"
                             paddingTop="20" paddingBottom="20"
                             width="90%"
                             maxWidth="400"
                             @tap="preventClose">
-                    
-                    <Image src="~/assets/images/smile.png" 
-                           width="60" height="60" 
+
+                    <Image src="~/assets/images/smile.png"
+                           width="60" height="60"
                            horizontalAlignment="center" />
-                    
-                    <Label text="Ещё не задали бюджет?" 
+
+                    <Label text="Ещё не задали бюджет?"
                            class="popup-text"
                            textWrap="true"
                            horizontalAlignment="center"
                            marginTop="12" />
-                    <Label text="Нажмите кнопку ниже, чтобы установить лимиты" 
+                    <Label text="Нажмите кнопку ниже, чтобы установить лимиты"
                            class="popup-text"
                            textWrap="true"
                            horizontalAlignment="center"
                            marginTop="4" />
-                    
-                    <Button text="Настроить бюджет" 
+
+                    <Button text="Настроить бюджет"
                            class="budget-button"
-                           @tap="goToSettings" />
+                           @tap="goToSettingsFromPopup" />
                 </StackLayout>
             </GridLayout>
-            
+
         </GridLayout>
     </Page>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'nativescript-vue';
+import { $navigateTo } from 'nativescript-vue';
 import Settings from './Settings.vue';
 import Menu from './Menu.vue';
 import { getWarnings, removeWarning, Warning } from './data/warnings';
-import { 
-    getIncomes, 
-    getExpenses, 
-    getTotalIncome, 
-    getTotalIncomeSources,
-    Income, 
-    Expense, 
-    getStatusBarColor 
+import {
+    getExpenses,
+    Expense,
+    getStatusBarColor
 } from './data/budget';
+import { IncomesProvider } from '~/providers/income.provider';
+import { Income } from '../models/income.types';
 
 export default defineComponent({
     components: {
@@ -270,7 +256,10 @@ export default defineComponent({
             warnings: [] as Warning[],
             showAllWarnings: false,
             incomes: [] as Income[],
-            expenses: [] as Expense[]
+            expenses: [] as Expense[],
+            isLoading: true,
+            incomesProvider: new IncomesProvider(),
+            currentMonth: ''
         };
     },
     computed: {
@@ -286,30 +275,64 @@ export default defineComponent({
         hasExpenses(): boolean {
             return this.expenses && this.expenses.length > 0;
         },
-        hasNoData(): boolean {
-            return !this.hasIncomes && !this.hasExpenses;
-        },
         totalIncome(): number {
-            return getTotalIncome();
+            return this.incomesProvider.getTotalAmount(this.incomes);
         },
         totalIncomeSources(): number {
-            return getTotalIncomeSources();
+            return this.incomes.length;
         }
     },
-    created() {
-        this.loadWarnings();
-        this.loadBudgetData();
+    async mounted() {
+        this.currentMonth = this.getCurrentMonth();
+        await this.loadData();
     },
     methods: {
+        onPageLoaded() {
+            this.loadData();
+        },
+
+        onPageResumed() {
+            this.loadData();
+        },
+
+        async loadData(): Promise<void> {
+            this.isLoading = true;
+            try {
+                await this.loadIncomes();
+                this.loadWarnings();
+                this.loadExpenses();
+
+                if (this.hasIncomes) {
+                    this.showPopup = false;
+                }
+            } catch (error) {
+                this.showPopup = true;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async loadIncomes(): Promise<void> {
+            this.incomes = await this.incomesProvider.getIncomes();
+        },
+
         loadWarnings(): void {
             this.warnings = getWarnings();
         },
-        
-        loadBudgetData(): void {
-            this.incomes = getIncomes();
+
+        loadExpenses(): void {
             this.expenses = getExpenses();
         },
-        
+
+        getCurrentMonth(): string {
+            const months = [
+                'январе', 'феврале', 'марте', 'апреле', 'мае', 'июне',
+                'июле', 'августе', 'сентябре', 'октябре', 'ноябре', 'декабре'
+            ];
+            const currentMonthIndex = new Date().getMonth();
+            return months[currentMonthIndex];
+        },
+
         removeWarning(id: number): void {
             const removed = removeWarning(id);
             if (removed) {
@@ -317,58 +340,74 @@ export default defineComponent({
                 console.log(`Warning ${id} removed`);
             }
         },
-        
+
         toggleWarningsView(): void {
             this.showAllWarnings = !this.showAllWarnings;
             console.log('Show all warnings:', this.showAllWarnings);
         },
-        
-        addIncome(): void {
-            console.log('Add income clicked');
-            // Здесь будет логика добавления дохода
-        },
-        
-        addExpense(): void {
-            console.log('Add expense clicked');
-            // Здесь будет логика добавления расхода
-        },
-        
-        formatAmount(amount: number): string {
-            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        },
-        
-        getSourceWord(count: number): string {
-            if (count === 1) return 'источник';
-            if (count >= 2 && count <= 4) return 'источника';
-            return 'источников';
-        },
-        
-        getTransactionWord(count: number): string {
-            if (count === 1) return 'транзакция';
-            if (count >= 2 && count <= 4) return 'транзакции';
-            return 'транзакций';
-        },
-        
-        getStatusBarColor(percent: number): string {
-            return getStatusBarColor(percent);
-        },
-        
-        goToSettings(): void {
-            console.log('Navigating to Settings...');
-            this.$navigateTo(Settings, {
+
+        async addIncome(): Promise<void> {
+            $navigateTo(Settings, {
                 transition: {
                     name: 'slideLeft',
                     duration: 300
                 }
             });
         },
-        
+
+        addExpense(): void {
+            console.log('Add expense clicked');
+        },
+
+        formatAmount(amount: number): string {
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        },
+
+        getSourceWord(count: number): string {
+            if (count === 1) return 'источник';
+            if (count >= 2 && count <= 4) return 'источника';
+            return 'источников';
+        },
+
+        getTransactionWord(count: number): string {
+            if (count === 1) return 'транзакция';
+            if (count >= 2 && count <= 4) return 'транзакции';
+            return 'транзакций';
+        },
+
+        getStatusBarColor(percent: number): string {
+            return getStatusBarColor(percent);
+        },
+
+        goToSettings(): void {
+            $navigateTo(Settings, {
+                transition: {
+                    name: 'slideLeft',
+                    duration: 300
+                }
+            });
+        },
+
+        goToSettingsFromPopup(): void {
+            this.showPopup = false;
+            $navigateTo(Settings, {
+                transition: {
+                    name: 'slideLeft',
+                    duration: 300
+                }
+            });
+        },
+
         closePopup(): void {
             this.showPopup = false;
         },
-        
+
         preventClose(event: any): void {
             event.cancelBubble = true;
+        },
+
+        async refreshData(): Promise<void> {
+            await this.loadData();
         }
     }
 });
@@ -386,7 +425,6 @@ export default defineComponent({
     font-size: 24;
 }
 
-/* Стили для блока предупреждений */
 .warnings-title {
     color: white;
     font-family: 'Inter';
@@ -440,7 +478,6 @@ export default defineComponent({
     width: 100%;
 }
 
-/* Стили для блока доходов */
 .income-title {
     color: white;
     font-family: 'Inter';
@@ -463,26 +500,6 @@ export default defineComponent({
     margin-top: 4;
 }
 
-.income-item {
-    background-color: #3F3D5B;
-    border-radius: 12;
-    padding: 12;
-}
-
-.income-item-amount {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-}
-
-.income-item-source {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 12;
-}
-
 .income-button {
     background-color: #964BDC;
     color: white;
@@ -498,7 +515,6 @@ export default defineComponent({
     background-color: #7B3CB0;
 }
 
-/* Стили для блока расходов */
 .expense-title {
     color: white;
     font-family: 'Inter';
