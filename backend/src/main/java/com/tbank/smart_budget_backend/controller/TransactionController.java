@@ -55,7 +55,6 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<List<Transaction>> getTransactions(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(required = false) String search,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate toDate) {
@@ -66,7 +65,7 @@ public class TransactionController {
         LocalDateTime to = toDate != null ? toDate.atTime(23, 59, 59) : null;
 
         List<Transaction> transactions = transactionRepository.findWithFilters(
-                user.getId(), search, categoryId, from, to);
+                user.getId(), categoryId, from, to);
         return ResponseEntity.ok(transactions);
     }
 
