@@ -76,11 +76,11 @@
                         </StackLayout>
                     </StackLayout>
                     
-                    <!-- Пустое состояние и всплывающее окно -->
+                    <!-- Пустое состояние -->
                     <FlexboxLayout v-if="goals.length === 0 && !isLoading" 
                                    flexDirection="column" justifyContent="center" alignItems="center" 
                                    height="100%" minHeight="500">
-                        <!-- Здесь будет всплывающее окно -->
+                        <!-- Здесь будет пусто -->
                     </FlexboxLayout>
                     
                     <!-- Дополнительный отступ снизу для удобства скролла -->
@@ -96,16 +96,16 @@
                   @update:activeTab="activeTab = $event"
                   zIndex="1" />
             
-            <!-- СЛОЙ 3: ЗАТЕМНЯЮЩИЙ ФОН (ПОВЕРХ МЕНЮ) - показываем только если нет данных -->
-            <GridLayout v-if="showPopup && goals.length === 0 && !isLoading" row="0" col="0" rows="*" columns="*" 
+            <!-- СЛОЙ 3: ЗАТЕМНЯЮЩИЙ ФОН (ПОВЕРХ МЕНЮ) - ПОЯВЛЯЕТСЯ ВСЕГДА ПРИ ПЕРВОМ ЗАХОДЕ -->
+            <GridLayout v-if="showWelcomePopup" row="0" col="0" rows="*" columns="*" 
                        backgroundColor="#818181" opacity="0.64"
-                       @tap="closePopup"
+                       @tap="closeWelcomePopup"
                        zIndex="1000" />
             
-            <!-- СЛОЙ 4: МОДАЛЬНОЕ ОКНО (САМЫЙ ВЕРХ) - показываем только если нет данных -->
-            <GridLayout v-if="showPopup && goals.length === 0 && !isLoading" row="0" col="0" rows="auto" columns="auto" 
+            <!-- СЛОЙ 4: ПРИВЕТСТВЕННОЕ МОДАЛЬНОЕ ОКНО (САМЫЙ ВЕРХ) - ПОЯВЛЯЕТСЯ ВСЕГДА ПРИ ПЕРВОМ ЗАХОДЕ -->
+            <GridLayout v-if="showWelcomePopup" row="0" col="0" rows="auto" columns="auto" 
                        horizontalAlignment="center" verticalAlignment="center"
-                       @tap="closePopup"
+                       @tap="closeWelcomePopup"
                        zIndex="1001">
                 <StackLayout backgroundColor="white" borderRadius="15" 
                             paddingLeft="20" paddingRight="20" 
@@ -118,15 +118,20 @@
                            width="60" height="60" 
                            horizontalAlignment="center" />
                     
-                    <Label text="Пора ставить цели! Нажмите кнопку ниже" 
+                    <Label text="Пора ставить цели!" 
                            class="popup-text"
                            textWrap="true"
                            horizontalAlignment="center"
                            marginTop="12" />
+                    <Label text="Нажмите кнопку ниже" 
+                           class="popup-text"
+                           textWrap="true"
+                           horizontalAlignment="center"
+                           marginTop="4" />
                     
                     <Button text="Добавить цель" 
                            class="budget-button"
-                           @tap="showAddModalFromPopup" />
+                           @tap="showAddModalFromWelcome" />
                 </StackLayout>
             </GridLayout>
             
@@ -248,6 +253,7 @@
                 </StackLayout>
             </GridLayout>
             
+            <!-- ОСТАЛЬНЫЕ МОДАЛЬНЫЕ ОКНА (БЕЗ ИЗМЕНЕНИЙ) -->
             <!-- СЛОЙ 6: МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ЦЕЛИ -->
             <GridLayout v-if="showEditModalFlag" row="0" col="0" rows="*" columns="*" 
                        backgroundColor="#818181" opacity="0.64"
@@ -445,11 +451,7 @@
                     </FlexboxLayout>
                 </StackLayout>
             </GridLayout>
-            <GridLayout height="100px">
-                <StackLayout>
-
-                </StackLayout>
-            </GridLayout>
+            
         </GridLayout>
     </Page>
 </template>
@@ -468,7 +470,7 @@ export default defineComponent({
             activeTab: 'goals',
             goals: [] as Goal[],
             isLoading: true,
-            showPopup: true,
+            showWelcomePopup: true, // Всегда показываем приветственное окно при загрузке
             
             showAddModalFlag: false,
             showEditModalFlag: false,
@@ -550,9 +552,6 @@ export default defineComponent({
             this.isLoading = true;
             try {
                 this.goals = getGoals();
-                if (this.goals.length > 0) {
-                    this.showPopup = false;
-                }
             } finally {
                 this.isLoading = false;
             }
@@ -628,8 +627,12 @@ export default defineComponent({
             }
         },
         
-        showAddModalFromPopup() {
-            this.showPopup = false;
+        closeWelcomePopup() {
+            this.showWelcomePopup = false;
+        },
+        
+        showAddModalFromWelcome() {
+            this.showWelcomePopup = false;
             this.showAddModal();
         },
         
@@ -711,10 +714,6 @@ export default defineComponent({
                 this.loadData();
                 this.closeDeleteModal();
             }
-        },
-        
-        closePopup() {
-            this.showPopup = false;
         },
         
         preventClose(event: any) {
