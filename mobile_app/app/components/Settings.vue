@@ -483,10 +483,11 @@ export default defineComponent({
             return baseWidth + (length * charWidth);
         },
         isAddFormValid(): boolean {
-            return this.newIncome.amount.trim() !== '' &&
-                   parseFloat(this.newIncome.amount) > 0 &&
-                   !this.dateError &&
-                   this.isValidDate(this.newIncome.date);
+            return this.newIncome.source.trim() !== '' &&
+                this.newIncome.amount.trim() !== '' &&
+                parseFloat(this.newIncome.amount) > 0 &&
+                !this.dateError &&
+                this.isValidDate(this.newIncome.date);
         },
         totalDistributionPercent(): number {
             let total = this.distributionCategories.reduce((sum, cat) => {
@@ -531,11 +532,9 @@ export default defineComponent({
         async loadData(): Promise<void> {
             this.isLoading = true;
             try {
-                await Promise.all([
-                    this.loadIncomes(),
-                    this.loadCategories(),
-                    this.loadBudgetStatus()
-                ]);
+                await this.loadIncomes();
+                await this.loadCategories();
+                await this.loadBudgetStatus();
             } finally {
                 this.isLoading = false;
             }
@@ -595,7 +594,6 @@ export default defineComponent({
             return 'источников';
         },
 
-        // Тут можно назначить иконки категориям, пока не стоит ничего
         getCategoryIcon(categoryName: string): string {
             return '~/assets/images/category.png';
         },
@@ -610,21 +608,14 @@ export default defineComponent({
 
         isValidDate(dateString: string): boolean {
             const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/;
-
-            if (!dateRegex.test(dateString)) {
-                return false;
-            }
-
+            if (!dateRegex.test(dateString)) return false;
             const [day, month, year] = dateString.split('.').map(Number);
             const date = new Date(year, month - 1, day);
-            return date.getDate() === day &&
-                   date.getMonth() === month - 1 &&
-                   date.getFullYear() === year;
+            return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
         },
 
         validateDate(): void {
             this.dateFocused = false;
-
             if (!this.isValidDate(this.newIncome.date)) {
                 this.dateError = 'Введите корректную дату';
             } else {
@@ -643,23 +634,16 @@ export default defineComponent({
 
         getOtherCategoriesTotal(excludeId: number): number {
             let total = 0;
-
             for (const cat of this.distributionCategories) {
                 if (cat.id !== excludeId) {
                     const val = parseFloat(cat.percent);
-                    if (!isNaN(val)) {
-                        total += val;
-                    }
+                    if (!isNaN(val)) total += val;
                 }
             }
-
             if (this.showNewCategory && this.newCategoryPercent) {
                 const val = parseFloat(this.newCategoryPercent);
-                if (!isNaN(val)) {
-                    total += val;
-                }
+                if (!isNaN(val)) total += val;
             }
-
             return total;
         },
 
@@ -684,7 +668,6 @@ export default defineComponent({
             }
 
             let value = parseInt(category.percent);
-
             const otherCategoriesTotal = this.getOtherCategoriesTotal(category.id);
             const maxAllowed = 100 - otherCategoriesTotal;
 
@@ -720,12 +703,10 @@ export default defineComponent({
             }
 
             let value = parseInt(this.newCategoryPercent);
-
             const existingTotal = this.distributionCategories.reduce((sum, cat) => {
                 const val = parseFloat(cat.percent);
                 return sum + (isNaN(val) ? 0 : val);
             }, 0);
-
             const maxAllowed = 100 - existingTotal;
 
             if (value > maxAllowed) {
@@ -790,6 +771,9 @@ export default defineComponent({
                 try {
                     await this.incomesProvider.deleteIncome(this.selectedIncome.id);
                     await this.loadIncomes();
+                    await this.updateBudgetAfterIncomeChange();
+                    await this.loadBudgetStatus();
+                    await this.budgetProvider.getAlerts();
                 } finally {
                     this.isLoading = false;
                     this.closeDeleteModal();
@@ -814,25 +798,16 @@ export default defineComponent({
                     allCategories: this.allCategories,
                     onCategorySelected: (category: Category) => {
                         if (!category) return;
-
-                        const exists = this.distributionCategories.some(
-                            c => c.id === category.id
-                        );
-
-                        if (exists) {
-                            return;
-                        }
-
+                        const exists = this.distributionCategories.some(c => c.id === category.id);
+                        if (exists) return;
                         this.distributionCategories.push({
                             ...category,
                             percent: '',
                             focused: false
                         });
-
                         if (!this.allCategories.some(c => c.id === category.id)) {
                             this.allCategories.push(category);
                         }
-
                         this.showNewCategory = false;
                         this.newCategoryPercent = '';
                     }
@@ -845,19 +820,41 @@ export default defineComponent({
                 this.isAdding = true;
                 try {
                     const amount = parseFloat(this.newIncome.amount);
-
                     await this.incomesProvider.createIncome({
                         source: this.newIncome.source || undefined,
                         amount: amount,
                         date: this.newIncome.date
                     });
-
                     await this.loadIncomes();
+                    await this.updateBudgetAfterIncomeChange();
+                    await this.loadBudgetStatus();
+                    await this.budgetProvider.getAlerts();
                     this.closeAddModal();
-
                 } finally {
                     this.isAdding = false;
                 }
+            }
+        },
+
+        async updateBudgetAfterIncomeChange(): Promise<void> {
+            try {
+                const status = await this.budgetProvider.getBudgetStatus();
+                const percentages: Record<string, number> = {};
+
+                status.categories.forEach(cat => {
+                    if (cat.percent > 0) {
+                        percentages[cat.categoryId.toString()] = cat.percent;
+                    }
+                });
+
+                if (Object.keys(percentages).length > 0) {
+                    await this.budgetProvider.setupBudget({
+                        plannedIncome: this.totalIncome,
+                        percentages: percentages
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to update budget after income change:', error);
             }
         },
 
@@ -867,7 +864,6 @@ export default defineComponent({
             this.isSaving = true;
             try {
                 const percentages: Record<string, number> = {};
-
                 this.distributionCategories.forEach(category => {
                     const percentValue = parseInt(category.percent);
                     if (category.percent && !isNaN(percentValue) && percentValue > 0) {
@@ -884,8 +880,9 @@ export default defineComponent({
                     percentages: percentages
                 });
 
-                $navigateBack();
+                await this.budgetProvider.getAlerts();
 
+                $navigateBack();
             } finally {
                 this.isSaving = false;
             }
@@ -934,7 +931,6 @@ export default defineComponent({
     font-size: 18;
 }
 
-/* Стили для блока доходов */
 .income-title {
     color: white;
     font-family: 'Inter';
@@ -986,7 +982,6 @@ export default defineComponent({
     font-size: 14;
 }
 
-/* Стили для блока распределения */
 .distribution-title {
     color: white;
     font-family: 'Inter';
@@ -1137,7 +1132,6 @@ export default defineComponent({
     background-color: #CC0000;
 }
 
-/* Стили для модальных окон */
 .delete-modal {
     background-color: white;
     border-radius: 15;
@@ -1170,7 +1164,6 @@ export default defineComponent({
     background-color: transparent;
 }
 
-/* Стили для модального окна добавления */
 .add-modal {
     background-color: #1E1D2E;
     border-radius: 16;

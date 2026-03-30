@@ -168,3 +168,8 @@ export const hasExpenses = (): boolean => {
 export const getAvailableExpenseIcons = (): string[] => {
     return ['shop', 'family', 'clothes', 'transport', 'entertainment', 'food', 'health', 'education'];
 };
+
+// Функция для получения списка категорий расходов
+export const getExpenseCategories = (): string[] => {
+    return expenses.map(e => e.category);
+};
