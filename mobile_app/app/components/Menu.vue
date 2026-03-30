@@ -70,21 +70,21 @@ export default defineComponent({
                         transition: { name: 'fade', duration: 300 }
                     });
                     break;
-                // case 'history':
-                //     this.$navigateTo(require('./History.vue').default, {
-                //         transition: { name: 'fade', duration: 300 }
-                //     });
-                //     break;
-                // case 'goals':
-                //     this.$navigateTo(require('./Goals.vue').default, {
-                //         transition: { name: 'fade', duration: 300 }
-                //     });
-                //     break;
-                // case 'profile':
-                //     this.$navigateTo(require('./Profile.vue').default, {
-                //         transition: { name: 'fade', duration: 300 }
-                //     });
-                //     break;
+                case 'history':
+                    this.$navigateTo(require('./History.vue').default, {
+                        transition: { name: 'fade', duration: 300 }
+                    });
+                    break;
+                case 'goals':
+                    this.$navigateTo(require('./Goals.vue').default, {
+                        transition: { name: 'fade', duration: 300 }
+                    });
+                    break;
+                case 'profile':
+                    this.$navigateTo(require('./Profile.vue').default, {
+                        transition: { name: 'fade', duration: 300 }
+                    });
+                    break;
             }
         },
 

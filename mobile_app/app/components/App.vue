@@ -14,12 +14,18 @@ import { AuthProvider } from '~/providers/auth.provider';
 import Welcome from './Welcome.vue';
 import Login from './Login.vue';
 import MyBudget from './MyBudget.vue';
+import Goals from './Goals.vue';
+import History from './History.vue';
+import Profile from './Profile.vue';
 
 export default defineComponent({
   components: {
     Welcome,
     Login,
-    MyBudget
+    MyBudget,
+    Goals,
+    History,
+    Profile
   },
 
   data() {
