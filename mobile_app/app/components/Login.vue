@@ -16,8 +16,8 @@
                             <!-- Подзаголовок с цветным словом Wallet -->
                             <StackLayout class="mt-6 text-center">
                                 <FlexboxLayout flexDirection="row" justifyContent="center" alignItems="center" flexWrap="wrap">
-                                    <Label class="text-white font-inter font-semibold text-[18px] leading-[27px]" text="Войдите в свой аккаунт для работы с " />
-                                    <Label class="text-white font-inter font-semibold text-[18px] leading-[27px]" text="Smart" />
+                                    <Label class="text-white font-inter font-semibold text-[18px] " text="Войдите в свой аккаунт для работы с " textWrap="true"/>
+                                    <Label class="text-white font-inter font-semibold text-[18px] " text="Smart" />
                                     <Label class="text-[#964BDC] font-inter font-semibold text-[18px] leading-[27px]" text="Wallet" />
                                 </FlexboxLayout>
                             </StackLayout>
@@ -90,7 +90,7 @@
 
                                 <!-- Забыли пароль (как ссылка) -->
                                 <Label text="Забыли пароль?"
-                                       class="text-white font-inter font-semibold text-[14px] leading-[14px] text-right mt-4 mb-2"
+                                       class="text-white font-inter font-semibold text-[12px] leading-[14px] text-right mt-4 mb-2"
                                        @tap="onForgotPassword"/>
 
                                 <!-- Индикатор загрузки или кнопка входа -->
@@ -110,9 +110,9 @@
                                 <FlexboxLayout flexDirection="row" justifyContent="center" alignItems="center"
                                                class="mt-6">
                                     <Label text="Нет аккаунта?"
-                                           class="text-white font-inter font-semibold text-[14px]" />
+                                           class="text-white font-inter font-semibold text-[12px]" textWrap="true"/>
                                     <Label text="Зарегистрироваться"
-                                           class="text-[#964BDC] font-inter font-semibold text-[14px] ml-8"
+                                           class="text-[#964BDC] font-inter font-semibold text-[12px] ml-8" textWrap="true"
                                            @tap="goToRegistration" />
                                 </FlexboxLayout>
                             </StackLayout>

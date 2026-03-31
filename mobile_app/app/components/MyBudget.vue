@@ -875,7 +875,8 @@ export default defineComponent({
     color: white;
     font-family: 'Inter';
     font-weight: bold;
-    font-size: 24;
+    font-size: 18;
+    textWrap: true;
 }
 
 .settings-button {

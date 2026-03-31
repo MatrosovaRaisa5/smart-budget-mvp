@@ -559,7 +559,7 @@ export default defineComponent({
     color: white;
     font-family: 'Inter';
     font-weight: bold;
-    font-size: 24;
+    font-size: 20;
     line-height: 36;
     text-align: center;
 }

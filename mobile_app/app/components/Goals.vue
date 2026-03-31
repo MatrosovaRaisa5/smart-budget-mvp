@@ -55,7 +55,7 @@
                             
                             <!-- Рекомендуемый ежемесячный взнос -->
                             <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculateMonthly(goal)) + ' ₽'"
-                                   class="goal-monthly"
+                                   class="goal-monthly" textWrap="true"
                                    marginBottom="8" />
                             
                             <!-- Статус бар -->
@@ -236,7 +236,7 @@
                     
                     <!-- Рекомендуемый ежемесячный взнос -->
                     <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculatedMonthly) + ' ₽'"
-                           class="recommended-text"
+                           class="recommended-text" textWrap="true"
                            marginBottom="16" />
                     
                     <!-- Кнопки -->
@@ -355,7 +355,7 @@
                     
                     <!-- Рекомендуемый ежемесячный взнос -->
                     <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculateMonthly(editingGoal)) + ' ₽'"
-                           class="recommended-text"
+                           class="recommended-text" textWrap="true"
                            marginBottom="16" />
                     
                     <!-- Кнопки -->
