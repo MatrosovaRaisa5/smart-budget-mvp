@@ -16,7 +16,7 @@
                             <!-- Подзаголовок с цветным словом Wallet -->
                             <StackLayout class="mt-6 text-center">
                                 <FlexboxLayout flexDirection="row" justifyContent="center" alignItems="center" flexWrap="wrap">
-                                    <Label class="text-white font-inter font-semibold text-[18px] " text="Войдите в свой аккаунт для работы с " textWrap="true"/>
+                                    <Label class="text-white font-inter font-semibold text-[18px] " text="Войдите в свой аккаунт для работы в " textWrap="true"/>
                                     <Label class="text-white font-inter font-semibold text-[18px] " text="Smart" />
                                     <Label class="text-[#964BDC] font-inter font-semibold text-[18px] leading-[27px]" text="Wallet" />
                                 </FlexboxLayout>
