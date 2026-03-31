@@ -876,7 +876,6 @@ export default defineComponent({
     font-family: 'Inter';
     font-weight: bold;
     font-size: 18;
-    textWrap: true;
 }
 
 .settings-button {
@@ -1003,14 +1002,14 @@ export default defineComponent({
     color: white;
     font-family: 'Inter';
     font-weight: bold;
-    font-size: 16;
+    font-size: 11;
 }
 
 .expense-transactions {
     color: #969696;
     font-family: 'Inter';
     font-weight: 600;
-    font-size: 12;
+    font-size: 9;
     margin-top: 2;
 }
 
@@ -1018,14 +1017,14 @@ export default defineComponent({
     color: white;
     font-family: 'Inter';
     font-weight: 600;
-    font-size: 14;
+    font-size: 11;
 }
 
 .expense-remaining {
     color: #969696;
     font-family: 'Inter';
     font-weight: 600;
-    font-size: 12;
+    font-size: 9;
     margin-top: 2;
 }
 
