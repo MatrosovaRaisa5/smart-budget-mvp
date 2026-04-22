@@ -1,195 +1,84 @@
 <template>
-    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#13131A]">
-        <GridLayout rows="*, auto" columns="*" class="bg-[#13131A]">
+    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#121212]">
+        <GridLayout rows="*, auto" columns="*" class="bg-[#121212]">
 
-            <!-- Индикатор загрузки -->
-            <GridLayout v-if="isLoading" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#13131A" zIndex="2000">
-                <ActivityIndicator :busy="true" color="#964BDC" width="50" height="50" />
-            </GridLayout>
+            <ScrollView v-if="!isLoading" row="0" col="0">
+                <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pt-8 pb-4">
 
-            <!-- СЛОЙ 1: ОСНОВНОЙ КОНТЕНТ (СКРОЛЛИТСЯ) -->
-            <ScrollView v-else row="0" col="0">
-                <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pb-20">
+                    <FlexboxLayout flexDirection="row" alignItems="center" class="mb-6">
+                        <Image src="~/assets/images/back.png" width="25" height="25" @tap="goBack" />
+                        <Label text="Выберите категорию" class="text-white font-inter font-semibold text-2xl ml-4 flex-1" />
+                    </FlexboxLayout>
 
-                    <!-- Верхняя панель с заголовком -->
-                    <GridLayout rows="auto" columns="auto, *" class="mt-4 mb-6">
-                        <Image col="0" src="~/assets/images/back.png"
-                               width="20" height="17"
-                               class="justify-start"
-                               @tap="goBack" />
-
-                        <Label col="1" text="Выберите категорию"
-                               class="text-white font-inter font-bold text-[18px] ml-6 justify-start" />
-                    </GridLayout>
-
-                    <!-- Поисковая строка с кнопкой отмена -->
                     <GridLayout rows="auto" columns="*, auto" class="mb-4">
-                        <GridLayout col="0" class="bg-[#3F3D5B] rounded-[32px] border-2 border-[#3F3D5B] w-full h-12 px-4"
-                                   :class="{ 'border-[#964BDC]': searchFocused || searchText }">
-
-                            <TextField v-model="searchText"
-                                      :hint="!searchText ? 'Найти или создать категорию' : ''"
-                                      class="text-white font-inter font-semibold text-[14px] bg-transparent p-0 placeholder-[#8E8E93] h-12"
-                                      @focus="searchFocused = true"
-                                      @blur="searchFocused = false"
-                                      @textChange="filterCategories" />
+                        <GridLayout col="0" class="bg-[#262626] rounded-2xl px-4 h-14 items-center" :class="searchFocused || searchText ? 'border-[#964BDC] border-5' : ''">
+                            <FlexboxLayout flexDirection="row" alignItems="center" class="w-full">
+                                <Image src="~/assets/images/search.png" width="14" height="14" class="mr-2" />
+                                <TextField v-model="searchText" hint="Найти категорию" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" @focus="searchFocused = true" @blur="searchFocused = false" @textChange="filterCategories" />
+                            </FlexboxLayout>
                         </GridLayout>
 
-                        <Label col="1" v-if="searchText"
-                               text="Отмена"
-                               class="text-[#969696] font-inter font-semibold text-[14px] ml-4 align-middle"
-                               @tap="clearSearch" />
+                        <Label col="1" v-if="searchText" text="Отмена" class="text-[#964BDC] font-inter font-semibold text-sm ml-4 self-center" @tap="clearSearch" />
                     </GridLayout>
 
-                    <!-- Список категорий -->
                     <StackLayout>
-                        <!-- Строка создания новой категории (всегда первая) -->
-                        <GridLayout rows="auto" columns="auto, *, auto"
-                                   class="py-3 border-b border-[#2F2D44]"
-                                   @tap="showCreateCategoryModal">
-
-                            <Image col="0" src="~/assets/images/star.png"
-                                   width="22" height="22"
-                                   class="justify-start" />
-
-                            <Label col="1" text="Создать новую категорию"
-                                   class="text-white font-inter font-bold text-[14px] ml-4 align-middle" />
-
-                            <Image col="2" src="~/assets/images/next.png"
-                                   width="6" height="12"
-                                   class="mr-4 align-middle" />
+                        <GridLayout rows="auto" columns="auto, *" class="py-3 border-b border-[#262626]" @tap="showCreateCategoryModal">
+                            <Label col="1" text="Создать новую категорию" class="text-[#964BDC] font-inter font-semibold text-sm" />
                         </GridLayout>
 
-                        <!-- Отфильтрованные категории (глобальные) -->
-                        <GridLayout v-for="category in filteredGlobalCategories" :key="category.id"
-                                   rows="auto" columns="auto, *, auto"
-                                   class="py-3 border-b border-[#2F2D44]"
-                                   @tap="selectCategory(category)">
-
-                            <Image col="0" :src="getCategoryIcon(category.name)"
-                                   width="22" height="22"
-                                   class="justify-start" />
-
-                            <Label col="1" :text="category.name"
-                                   class="text-white font-inter font-bold text-[14px] ml-4 align-middle" />
-
-                            <!-- Чекбокс -->
-                            <GridLayout col="2" width="20" height="20"
-                                       class="border-[5px] border-[#969696] rounded-full mr-4 items-center justify-center"
-                                       :class="{ 'border-[#964BDC]': selectedCategoryId === category.id }">
-                                <GridLayout v-if="selectedCategoryId === category.id"
-                                           width="10" height="10"
-                                           class="bg-[#964BDC] rounded-full" />
-                            </GridLayout>
-                        </GridLayout>
-
-                        <!-- Пользовательские категории (если есть) -->
-                        <StackLayout v-if="filteredUserCategories.length > 0" class="mt-4">
-                            <Label text="Мои категории"
-                                   class="text-[#969696] font-inter font-semibold text-[12px] mb-2" />
-
-                            <GridLayout v-for="category in filteredUserCategories" :key="category.id"
-                                       rows="auto" columns="auto, *, auto"
-                                       class="py-3 border-b border-[#2F2D44]"
-                                       @tap="selectCategory(category)">
-
-                                <Image col="0" :src="getCategoryIcon(category.name)"
-                                       width="22" height="22"
-                                       class="justify-start" />
-
-                                <Label col="1" :text="category.name"
-                                       class="text-white font-inter font-bold text-[14px] ml-4 align-middle" />
-
-                                <!-- Чекбокс -->
-                                <GridLayout col="2" width="20" height="20"
-                                           class="border-[5px] border-[#969696] rounded-full mr-4 items-center justify-center"
-                                           :class="{ 'border-[#964BDC]': selectedCategoryId === category.id }">
-                                    <GridLayout v-if="selectedCategoryId === category.id"
-                                               width="10" height="10"
-                                               class="bg-[#964BDC] rounded-full" />
+                        <StackLayout v-if="filteredGlobalCategories.length > 0" class="mt-2">
+                            <Label text="Все категории" class="text-[#8A8A8A] font-inter font-semibold text-m mb-2" />
+                            <GridLayout v-for="category in filteredGlobalCategories" :key="category.id" rows="auto" columns="auto, *, auto" class="py-3 border-b border-[#262626]" @tap="selectCategory(category)">
+                                <Image col="0" :src="getCategoryIcon(category.name)" width="20" height="20" />
+                                <Label col="1" :text="category.name" class="text-white font-inter font-semibold text-sm ml-3" />
+                                <GridLayout col="2" width="20" height="20" class="rounded-full border-5 mr-2 items-center justify-center" :class="selectedCategoryId === category.id ? 'border-[#964BDC] bg-[#964BDC]' : 'border-[#8A8A8A]'">
+                                    <Label v-if="selectedCategoryId === category.id" text="✓" color="white" fontSize="12" fontWeight="bold" textAlignment="center" verticalAlignment="center" />
                                 </GridLayout>
                             </GridLayout>
                         </StackLayout>
 
-                        <!-- Сообщение если ничего не найдено -->
-                        <Label v-if="filteredGlobalCategories.length === 0 && filteredUserCategories.length === 0 && searchText"
-                               text="Категории не найдены"
-                               class="text-[#969696] font-inter font-semibold text-[14px] text-center mt-6" />
-                    </StackLayout>
+                        <StackLayout v-if="filteredUserCategories.length > 0" class="mt-4">
+                            <Label text="Мои категории" class="text-[#8A8A8A] font-inter font-semibold text-m mb-2" />
+                            <GridLayout v-for="category in filteredUserCategories" :key="category.id" rows="auto" columns="auto, *, auto" class="py-3 border-b border-[#262626]" @tap="selectCategory(category)">
+                                <Image col="0" :src="getCategoryIcon(category.name)" width="20" height="20" />
+                                <Label col="1" :text="category.name" class="text-white font-inter font-semibold text-sm ml-3" />
+                                <GridLayout col="2" width="20" height="20" class="rounded-full border-5 mr-2 items-center justify-center" :class="selectedCategoryId === category.id ? 'border-[#964BDC] bg-[#964BDC]' : 'border-[#8A8A8A]'">
+                                    <Label v-if="selectedCategoryId === category.id" text="✓" color="white" fontSize="12" fontWeight="bold" textAlignment="center" verticalAlignment="center" />
+                                </GridLayout>
+                            </GridLayout>
+                        </StackLayout>
 
-                    <!-- Дополнительный отступ для контента -->
-                    <StackLayout height="20" />
+                        <Label v-if="filteredGlobalCategories.length === 0 && filteredUserCategories.length === 0 && searchText" text="Категории не найдены" class="text-[#8A8A8A] font-inter font-semibold text-sm text-center mt-8" textWrap="true" />
+                    </StackLayout>
 
                 </FlexboxLayout>
             </ScrollView>
 
-            <!-- СЛОЙ 2: КНОПКА ВЫБОРА КАТЕГОРИИ (ПРИБИТА К НИЗУ) -->
-            <GridLayout row="1" col="0"
-                       rows="auto"
-                       columns="*"
-                       class="px-4 pb-4">
+            <ActivityIndicator v-if="isLoading" row="0" col="0" :busy="true" color="#964BDC" class="my-auto" />
 
-                <Button text="Выбрать категорию"
-                        class="h-14 rounded-[32px] font-inter font-bold text-[14px] text-white w-full"
-                        :class="selectedCategoryId ? 'bg-[#964BDC] active:bg-[#7B3CB0]' : 'bg-[#969696]'"
-                        :isEnabled="!!selectedCategoryId"
-                        @tap="confirmSelection" />
+            <GridLayout row="1" col="0" rows="auto" columns="*" class="px-4 pb-4">
+                <Button text="Выбрать категорию" :class="['text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full', selectedCategoryId ? 'bg-[#964BDC]' : 'bg-[#969696]']" :isEnabled="!!selectedCategoryId" @tap="confirmSelection" />
             </GridLayout>
 
-            <!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ КАТЕГОРИИ -->
-            <!-- Затемняющий фон -->
-            <GridLayout v-if="showCreateModal" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeCreateModal"
-                       zIndex="1000" />
+            <GridLayout v-if="showCreateModal" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeCreateModal" zIndex="1000" />
 
-            <!-- Модальное окно -->
-            <GridLayout v-if="showCreateModal" row="0" col="0" rows="auto" columns="auto"
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="bg-[#1E1D2E] rounded-[32px] p-4 w-11/12 max-w-400" @tap="preventClose">
+            <GridLayout v-if="showCreateModal" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-[#1E1E1E] rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Новая категория" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
 
-                    <!-- Заголовок -->
-                    <Label text="Новая категория"
-                           class="text-white font-inter font-bold text-[18px] text-left mb-4" />
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="newCategoryFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusNewCategory">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Название категории" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="newCategoryField" v-model="newCategoryName" hint="Новая категория" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="newCategoryFocused = true" @blur="newCategoryFocused = false" />
+                        </StackLayout>
+                    </GridLayout>
+                    <Label v-if="categoryError" :text="categoryError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
 
-                    <!-- Поле ввода названия -->
-                    <StackLayout class="w-full mb-4">
-                        <GridLayout rows="auto" columns="*"
-                                   class="bg-[#2F2D44] rounded-[32px] border-2 border-[#2F2D44] w-full px-4 pt-2 pb-1 h-14 items-center"
-                                   :class="{ 'border-[#964BDC]': newCategoryFocused }">
+                    <ActivityIndicator v-if="isCreating" :busy="true" color="#964BDC" class="my-4" />
 
-                            <StackLayout class="align-middle w-full">
-                                <Label text="Название категории"
-                                       class="text-[#B4B4B4] font-inter font-semibold text-[12px] mb-0" />
+                    <Button v-else text="Добавить" :class="['text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-2', newCategoryName ? 'bg-[#964BDC]' : 'bg-[#969696]']" :isEnabled="!!newCategoryName" @tap="addNewCategory" />
 
-                                <TextField v-model="newCategoryName"
-                                          class="text-white font-inter font-semibold text-[14px] bg-transparent p-0 placeholder-[#B4B4B4] h-6"
-                                          @focus="newCategoryFocused = true"
-                                          @blur="newCategoryFocused = false" />
-                            </StackLayout>
-                        </GridLayout>
-
-                        <!-- Сообщение об ошибке -->
-                        <Label v-if="categoryError"
-                               :text="categoryError"
-                               class="text-[#FF0000] font-inter text-[12px] mt-2 ml-4" />
-                    </StackLayout>
-
-                    <!-- Индикатор загрузки при создании -->
-                    <ActivityIndicator v-if="isCreating" :busy="true" color="#964BDC" width="50" height="50" />
-
-                    <!-- Кнопки -->
-                    <Button v-else text="Добавить"
-                            class="h-14 rounded-[32px] font-inter font-bold text-[14px] text-white w-full mt-4"
-                            :class="newCategoryName ? 'bg-[#964BDC] active:bg-[#7B3CB0]' : 'bg-[#969696]'"
-                            :isEnabled="!!newCategoryName"
-                            @tap="addNewCategory" />
-
-                    <Button text="Отмена"
-                            class="h-14 rounded-[32px] font-inter font-bold text-[14px] text-white w-full bg-[#FF0000] active:bg-[#CC0000] mt-4"
-                            @tap="closeCreateModal" />
+                    <Button text="Отмена" class="bg-[#DE6C35] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-3" @tap="closeCreateModal" />
                 </StackLayout>
             </GridLayout>
 
@@ -232,6 +121,16 @@ export default defineComponent({
         await this.loadCategories();
     },
     methods: {
+        focusNewCategory() {
+            this.newCategoryFocused = true;
+            setTimeout(() => {
+                const field = this.$refs.newCategoryField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
+        },
+
         async loadCategories(): Promise<void> {
             this.isLoading = true;
             try {
@@ -243,12 +142,13 @@ export default defineComponent({
         },
 
         filterCategories(): void {
+            if (!this.searchText) {
+                this.filteredGlobalCategories = this.allCategories.filter(c => c.global);
+                this.filteredUserCategories = this.allCategories.filter(c => !c.global);
+                return;
+            }
             const searchLower = this.searchText.toLowerCase();
-
-            const filtered = this.allCategories.filter(c =>
-                c.name.toLowerCase().includes(searchLower)
-            );
-
+            const filtered = this.allCategories.filter(c => c.name.toLowerCase().includes(searchLower));
             this.filteredGlobalCategories = filtered.filter(c => c.global);
             this.filteredUserCategories = filtered.filter(c => !c.global);
         },
@@ -308,15 +208,18 @@ export default defineComponent({
         },
 
         selectCategory(category: Category): void {
-            if (this.onCategorySelected) {
-                this.onCategorySelected(category);
-            }
-            this.$navigateBack();
+            this.selectedCategoryId = category.id;
+            this.selectedCategoryData = category;
         },
 
         getCategoryIcon(categoryName: string): string {
-            // Здесь можно добавить логику выбора иконки по названию
-            return '~/assets/images/category.png';
+            const iconMap: Record<string, string> = {
+                'Продукты': 'shop',
+                'Семья': 'family',
+                'Одежда': 'clothes'
+            };
+            const icon = iconMap[categoryName] || 'star';
+            return `~/assets/images/${icon}.png`;
         },
 
         preventClose(event: any): void {

@@ -1,50 +1,43 @@
-<!-- app/components/Menu.vue -->
 <template>
-    <!-- Меню всегда прибито к низу -->
-    <FlexboxLayout flexDirection="row" justifyContent="space-around" alignItems="center"
-                   class="menu-container"
-                   paddingLeft="16" paddingRight="16"
-                   paddingTop="12" paddingBottom="12"
+    <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center"
+                   class="bg-[#121212] py-3 px-4"
                    @tap="preventClose">
 
-        <!-- Секция 1: Мой бюджет -->
-        <StackLayout class="menu-section" @tap="navigateTo('budget')">
+        <StackLayout class="items-center" @tap="navigateTo('budget')">
             <Image :src="activeTab === 'budget' ? '~/assets/images/budgetActive.png' : '~/assets/images/budgetUnActive.png'"
-                   width="26" height="24"
-                   horizontalAlignment="center" />
+                   width="26" height="26" />
             <Label text="Мой бюджет"
-                   :class="['menu-text', activeTab === 'budget' ? 'active' : 'inactive']"
-                   textWrap="false" />
+                   :class="['font-inter font-semibold text-[10px] mt-1 text-center', activeTab === 'budget' ? 'text-[#964BDC]' : 'text-[#969696]']" />
         </StackLayout>
 
-        <!-- Секция 2: История -->
-        <StackLayout class="menu-section" @tap="navigateTo('history')">
+        <StackLayout class="items-center" @tap="navigateTo('settings')">
+            <Image :src="activeTab === 'settings' ? '~/assets/images/settingsActive.png' : '~/assets/images/settingsUnActive.png'"
+                   width="26" height="26" />
+            <StackLayout class="items-center">
+                <Label text="Настройки"
+                    :class="['font-inter font-semibold text-[10px] mt-1 text-center', activeTab === 'settings' ? 'text-[#964BDC]' : 'text-[#969696]']" />
+            </StackLayout>
+        </StackLayout>
+
+        <StackLayout class="items-center" @tap="navigateTo('history')">
             <Image :src="activeTab === 'history' ? '~/assets/images/clockActive.png' : '~/assets/images/clockUnActive.png'"
-                   width="24" height="24"
-                   horizontalAlignment="center" />
+                   width="26" height="26" />
             <Label text="История"
-                   :class="['menu-text', activeTab === 'history' ? 'active' : 'inactive']"
-                   textWrap="false" />
+                   :class="['font-inter font-semibold text-[10px] mt-1 text-center', activeTab === 'history' ? 'text-[#964BDC]' : 'text-[#969696]']" />
         </StackLayout>
 
-        <!-- Секция 3: Мои цели -->
-        <StackLayout class="menu-section" @tap="navigateTo('goals')">
+        <StackLayout class="items-center" @tap="navigateTo('goals')">
             <Image :src="activeTab === 'goals' ? '~/assets/images/aimActive.png' : '~/assets/images/aimUnActive.png'"
-                   width="25" height="24"
-                   horizontalAlignment="center" />
+                   width="26" height="26" />
             <Label text="Мои цели"
-                   :class="['menu-text', activeTab === 'goals' ? 'active' : 'inactive']"
-                   textWrap="false" />
+                   :class="['font-inter font-semibold text-[10px] mt-1 text-center', activeTab === 'goals' ? 'text-[#964BDC]' : 'text-[#969696]']" />
         </StackLayout>
 
-        <!-- Секция 4: Профиль -->
-        <StackLayout class="menu-section" @tap="navigateTo('profile')">
+        <StackLayout class="items-center" @tap="navigateTo('profile')">
             <Image :src="activeTab === 'profile' ? '~/assets/images/profileActive.png' : '~/assets/images/profileUnActive.png'"
-                   width="18" height="24"
-                   horizontalAlignment="center" />
+                   width="26" height="26" />
             <Label text="Профиль"
-                   :class="['menu-text', activeTab === 'profile' ? 'active' : 'inactive']"
-                   textWrap="false" />
+                   :class="['font-inter font-semibold text-[10px] mt-1 text-center', activeTab === 'profile' ? 'text-[#964BDC]' : 'text-[#969696]']" />
         </StackLayout>
 
     </FlexboxLayout>
@@ -70,6 +63,11 @@ export default defineComponent({
                         transition: { name: 'fade', duration: 300 }
                     });
                     break;
+                case 'settings':
+                    this.$navigateTo(require('./Settings.vue').default, {
+                        transition: { name: 'fade', duration: 300 }
+                    });
+                    break;
                 case 'history':
                     this.$navigateTo(require('./History.vue').default, {
                         transition: { name: 'fade', duration: 300 }
@@ -89,37 +87,7 @@ export default defineComponent({
         },
 
         preventClose(): void {
-            // Предотвращаем всплытие события
         }
     }
 });
 </script>
-
-<style scoped>
-.menu-container {
-    background-color: #2F2D44;
-    border-radius: 50;
-    margin-left: 16;
-    margin-right: 16;
-    margin-bottom: 16;
-}
-
-.menu-section {
-    horizontal-align: center;
-    vertical-align: center;
-}
-
-.menu-text {
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 10;
-    margin-top: 4;
-    text-align: center;
-    width: auto;
-    color: #969696;
-}
-
-.menu-text.active {
-    color: #964BDC;
-}
-</style>

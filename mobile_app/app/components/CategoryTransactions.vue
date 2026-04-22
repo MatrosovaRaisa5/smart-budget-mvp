@@ -1,245 +1,104 @@
 <template>
-    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="page-category-transactions">
-        <GridLayout rows="*, auto" columns="*" backgroundColor="#13131A">
+    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#121212]">
+        <GridLayout rows="*, auto" columns="*" class="bg-[#121212]">
 
-            <!-- Индикатор загрузки -->
-            <GridLayout v-if="isLoading" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#13131A" zIndex="2000">
-                <ActivityIndicator :busy="true" color="#964BDC" width="50" height="50" />
-            </GridLayout>
+            <ScrollView v-if="!isLoading" row="0" col="0">
+                <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pt-8 pb-4">
 
-            <!-- СЛОЙ 1: ОСНОВНОЙ КОНТЕНТ (СКРОЛЛИТСЯ) -->
-            <ScrollView v-else row="0" col="0">
-                <FlexboxLayout flexDirection="column" alignItems="stretch" paddingLeft="16" paddingRight="16">
-
-                    <!-- Верхняя панель с заголовком -->
-                    <GridLayout rows="auto" columns="auto, *" marginTop="16" marginBottom="24">
-                        <Image col="0" src="~/assets/images/back.png"
-                               width="20" height="17"
-                               horizontalAlignment="left"
-                               @tap="goBack" />
-
-                        <Label col="1" :text="categoryName"
-                               class="page-title"
-                               marginLeft="24"
-                               horizontalAlignment="left" />
+                    <GridLayout rows="auto" columns="auto, *" class="mb-6" alignItems="center">
+                        <Image col="0" src="~/assets/images/back.png" width="25" height="25" @tap="goBack" />
+                        <Label col="1" :text="categoryName" class="text-white font-inter font-semibold text-2xl ml-4" textWrap="true" lineHeight="0" />
                     </GridLayout>
 
-                    <!-- Информация о тратах -->
-                    <StackLayout backgroundColor="#2F2D44" borderRadius="16"
-                                paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16"
-                                marginBottom="16">
+                    <StackLayout class="bg-[#1E1E1E] rounded-3xl px-4 pt-5 pb-4 mb-4">
+                        <Label :text="'Потрачено ' + formatAmount(spentAmount) + ' ₽'" class="text-white font-inter font-semibold text-xl mb-1" />
+                        <Label :text="'из ' + formatAmount(plannedAmount) + ' ₽ по плану'" class="text-[#8A8A8A] font-inter font-normal text-xs mb-4" />
 
-                        <Label :text="'Потрачено ' + formatAmount(spentAmount) + ' ₽'"
-                               class="spent-amount"
-                               marginBottom="4" />
-
-                        <Label :text="'из ' + formatAmount(plannedAmount) + ' ₽ по плану'"
-                               class="planned-amount"
-                               marginBottom="16" />
-
-                        <!-- Статус бар -->
-                        <GridLayout rows="auto" columns="*" height="3" marginBottom="16">
-                            <GridLayout col="0" backgroundColor="#969696" height="3" width="100%" />
-                            <GridLayout col="0" :backgroundColor="getStatusBarColor(spentPercent)"
-                                       :width="spentPercent + '%'" height="3"
-                                       horizontalAlignment="left" />
+                        <GridLayout rows="auto" columns="*" height="4" class="rounded-full overflow-hidden mb-4">
+                            <GridLayout col="0" backgroundColor="#454545" height="4" width="100%" borderRadius="2" />
+                            <GridLayout col="0" :backgroundColor="getStatusBarColor(spentPercent)" :width="spentPercent + '%'" height="4" borderRadius="2" horizontalAlignment="left" />
                         </GridLayout>
 
-                        <Label :text="formatAmount(remainingAmount) + ' ₽ до суммы, которую планировали потратить в этом месяце'"
-                               class="remaining-text"
-                               textWrap="true" />
+                        <Label :text="formatAmount(remainingAmount) + ' ₽ до суммы, которую планировали потратить в этом месяце'" class="text-[#8A8A8A] font-inter font-normal text-sm" textWrap="true" />
                     </StackLayout>
 
-                    <!-- Блок Транзакции -->
-                    <StackLayout backgroundColor="#2F2D44" borderRadius="16"
-                                paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16"
-                                marginBottom="16">
+                    <StackLayout class="bg-[#1E1E1E] rounded-3xl px-4 pt-5 pb-3 mb-20">
+                        <Label text="Транзакции" class="text-white font-inter font-semibold text-xl mb-4" />
 
-                        <Label text="Транзакции"
-                               class="transactions-title"
-                               marginBottom="16" />
-
-                        <!-- Список транзакций -->
-                        <StackLayout v-for="transaction in transactions" :key="transaction.id"
-                                   class="transaction-item"
-                                   marginBottom="12">
-
-                            <GridLayout rows="auto" columns="auto, *, auto, auto" width="100%">
-                                <!-- Иконка категории -->
-                                <Image col="0" src="~/assets/images/shop.png"
-                                       width="48" height="48"
-                                       horizontalAlignment="left" />
-
-                                <!-- Информация о трате -->
-                                <StackLayout col="1" marginLeft="12" verticalAlignment="center">
-                                    <Label :text="transaction.description"
-                                           class="transaction-name" />
-                                    <Label :text="formatDate(transaction.date)"
-                                           class="transaction-date" />
-                                </StackLayout>
-
-                                <!-- Сумма -->
-                                <Label col="2" :text="'- ' + formatAmount(transaction.amount) + ' ₽'"
-                                       class="transaction-amount"
-                                       verticalAlignment="center"
-                                       marginRight="16" />
-
-                                <!-- Кнопка удаления -->
-                                <Image col="3" src="~/assets/images/trash.png"
-                                       width="18" height="18"
-                                       verticalAlignment="center"
-                                       @tap="showDeleteModal(transaction)" />
-                            </GridLayout>
+                        <StackLayout v-for="transaction in transactions" :key="transaction.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
+                            <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center">
+                                <FlexboxLayout flexDirection="row" alignItems="center" class="flex-1">
+                                    <Image src="~/assets/images/shop.png" width="40" height="40" />
+                                    <StackLayout class="ml-3">
+                                        <Label :text="transaction.description" class="text-white font-inter font-semibold text-sm" />
+                                        <Label :text="formatDate(transaction.date)" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
+                                    </StackLayout>
+                                </FlexboxLayout>
+                                <FlexboxLayout flexDirection="row" alignItems="center">
+                                    <Label :text="'- ' + formatAmount(transaction.amount) + ' ₽'" class="text-white font-inter font-semibold text-sm mr-4" />
+                                    <Image src="~/assets/images/trash.png" width="24" height="24" @tap="showDeleteModal(transaction)" />
+                                </FlexboxLayout>
+                            </FlexboxLayout>
                         </StackLayout>
 
-                        <!-- Сообщение если нет транзакций -->
-                        <Label v-if="transactions.length === 0 && !isLoading"
-                               text="Нет транзакций"
-                               class="empty-text"
-                               textAlignment="center"
-                               marginTop="16" />
+                        <Label v-if="transactions.length === 0 && !isLoading" text="Нет транзакций" class="text-[#8A8A8A] font-inter font-semibold text-sm text-center" textWrap="true" />
                     </StackLayout>
-
                 </FlexboxLayout>
             </ScrollView>
 
-            <!-- СЛОЙ 2: КНОПКА ДОБАВИТЬ ТРАТУ (ПРИБИТА К НИЗУ) -->
-            <GridLayout row="1" col="0"
-                       rows="auto"
-                       columns="*"
-                       backgroundColor="#13131A"
-                       paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16">
+            <ActivityIndicator v-if="isLoading" row="0" col="0" :busy="true" color="#964BDC" class="my-auto" />
 
-                <Button text="Добавить трату"
-                        class="add-expense-button"
-                        @tap="showAddExpenseModal" />
+            <GridLayout row="1" col="0" rows="auto" columns="*" class="px-4 pb-4">
+                <Button text="Добавить трату" class="bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl" @tap="showAddExpenseModal" />
             </GridLayout>
 
-            <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ТРАТЫ -->
-            <GridLayout v-if="showAddModalFlag" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeAddModal"
-                       zIndex="1000" />
+            <GridLayout v-if="showAddModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeAddModal" zIndex="1000" />
 
-            <GridLayout v-if="showAddModalFlag" row="0" col="0" rows="auto" columns="auto"
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="add-modal" @tap="preventClose">
+            <GridLayout v-if="showAddModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-[#1E1E1E] rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Новая трата" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
 
-                    <!-- Заголовок -->
-                    <Label text="Новая трата"
-                           class="add-modal-title"
-                           marginBottom="16" />
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="nameFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusName">
+                        <StackLayout class="ml-1 py-1">
+                            <Label text="Название траты" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="nameField" v-model="newExpense.name" hint="Покупка" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="nameFocused = true" @blur="nameFocused = false" autocorrect="false" />
+                        </StackLayout>
+                    </GridLayout>
 
-                    <!-- Поле Название траты -->
-                    <StackLayout class="input-wrapper" marginBottom="16">
-                        <GridLayout rows="auto" columns="*"
-                                   class="input-field"
-                                   :class="{ 'input-focused': nameFocused }"
-                                   paddingLeft="16" paddingRight="16"
-                                   height="56"
-                                   @tap="focusName">
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="amountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusAmount">
+                        <StackLayout class="ml-1 py-1">
+                            <Label text="Сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <FlexboxLayout flexDirection="row" alignItems="center">
+                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
+                                <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
+                            </FlexboxLayout>
+                        </StackLayout>
+                    </GridLayout>
 
-                            <TextField v-model="newExpense.name"
-                                      ref="nameField"
-                                      :hint="!newExpense.name ? 'Название траты' : ''"
-                                      class="input-text"
-                                      @focus="nameFocused = true"
-                                      @blur="nameFocused = false"
-                                      autocorrect="false"
-                                      autocapitalizationType="sentences" />
-                        </GridLayout>
-                    </StackLayout>
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="dateFocused ? 'border-[#964BDC] border-5' : dateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusDate">
+                        <StackLayout class="ml-1 py-1">
+                            <Label text="Дата" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="dateField" v-model="newExpense.date" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateFocused = true" @blur="validateDate" />
+                        </StackLayout>
+                    </GridLayout>
+                    <Label v-if="dateError" :text="dateError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
 
-                    <!-- Поле Сумма -->
-                    <StackLayout class="input-wrapper" marginBottom="16">
-                        <GridLayout rows="auto" columns="auto, auto"
-                                   class="input-field"
-                                   :class="{ 'input-focused': amountFocused }"
-                                   paddingLeft="16"
-                                   height="56"
-                                   @tap="focusAmount">
+                    <ActivityIndicator v-if="isAdding" :busy="true" color="#964BDC" class="my-4" />
 
-                            <TextField col="0"
-                                      ref="amountField"
-                                      v-model="displayAmount"
-                                      :hint="!newExpense.amount ? '0' : ''"
-                                      class="input-text"
-                                      keyboardType="number"
-                                      @focus="amountFocused = true"
-                                      @blur="amountFocused = false" />
+                    <Button v-else text="Добавить трату" :class="['text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-2', isFormValid ? 'bg-[#964BDC]' : 'bg-[#969696]']" :isEnabled="isFormValid" @tap="addNewExpense" />
 
-                            <Label col="1" text="₽"
-                                   class="currency-symbol"
-                                   verticalAlignment="center" />
-                        </GridLayout>
-                    </StackLayout>
-
-                    <!-- Поле Дата -->
-                    <StackLayout class="input-wrapper" marginBottom="5">
-                        <GridLayout rows="auto" columns="*"
-                                   class="input-field"
-                                   :class="{ 'input-focused': dateFocused, 'input-error': dateError }"
-                                   paddingLeft="16" paddingRight="16"
-                                   height="56"
-                                   @tap="focusDate">
-
-                            <TextField v-model="newExpense.date"
-                                      ref="dateField"
-                                      :hint="!newExpense.date ? 'ДД.ММ.ГГГГ' : ''"
-                                      class="input-text"
-                                      @focus="dateFocused = true"
-                                      @blur="validateDate" />
-                        </GridLayout>
-
-                        <Label v-if="dateError"
-                               :text="dateError"
-                               class="error-message"
-                               marginTop="4" />
-                    </StackLayout>
-
-                    <!-- Индикатор загрузки при добавлении -->
-                    <ActivityIndicator v-if="isAdding" :busy="true" color="#964BDC" width="50" height="50" />
-
-                    <!-- Кнопки -->
-                    <Button v-else text="Добавить трату"
-                            :class="['add-button', isFormValid ? 'active' : 'inactive']"
-                            :isEnabled="isFormValid"
-                            @tap="addNewExpense"
-                            marginTop="16" />
-
-                    <Button text="Отмена"
-                            class="cancel-button-modal"
-                            @tap="closeAddModal"
-                            marginTop="16" />
+                    <Button text="Отмена" class="bg-[#DE6C35] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-3" @tap="closeAddModal" />
                 </StackLayout>
             </GridLayout>
 
-            <!-- МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ -->
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeDeleteModal"
-                       zIndex="1000" />
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeDeleteModal" zIndex="1000" />
 
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="auto" columns="auto"
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="delete-modal" @tap="preventClose">
-                    <Label text="Вы действительно хотите удалить транзакцию?"
-                           class="delete-modal-text"
-                           textWrap="true"
-                           marginBottom="24" />
-
-                    <FlexboxLayout flexDirection="row" justifyContent="flex-end">
-                        <Label text="Отмена"
-                               class="cancel-text"
-                               marginRight="40"
-                               @tap="closeDeleteModal" />
-
-                        <Label text="Удалить"
-                               class="delete-text"
-                               @tap="confirmDelete" />
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-white rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Вы действительно хотите удалить транзакцию?" class="text-[#8A8A8A] font-inter font-semibold text-base text-left" textWrap="true" />
+                    <FlexboxLayout flexDirection="row" justifyContent="flex-end" class="mt-4">
+                        <Label text="Отмена" class="text-[#964BDC] font-inter font-semibold text-sm py-2 px-4 mr-4" @tap="closeDeleteModal" />
+                        <Label text="Удалить" class="text-[#DE6C35] font-inter font-semibold text-sm py-2 px-4" @tap="confirmDelete" />
                     </FlexboxLayout>
                 </StackLayout>
             </GridLayout>
@@ -271,7 +130,7 @@ export default defineComponent({
         },
         icon: {
             type: String,
-            default: '~/assets/images/shop.png'
+            default: 'shop'
         }
     },
     data() {
@@ -356,24 +215,18 @@ export default defineComponent({
         },
 
         focusName(): void {
-            const nameField = this.$refs.nameField as any;
-            if (nameField && nameField.nativeView) {
-                nameField.nativeView.focus();
-            }
+            this.nameFocused = true;
+            (this.$refs.nameField as any).nativeView.focus();
         },
 
         focusAmount(): void {
-            const amountField = this.$refs.amountField as any;
-            if (amountField && amountField.nativeView) {
-                amountField.nativeView.focus();
-            }
+            this.amountFocused = true;
+            (this.$refs.amountField as any).nativeView.focus();
         },
 
         focusDate(): void {
-            const dateField = this.$refs.dateField as any;
-            if (dateField && dateField.nativeView) {
-                dateField.nativeView.focus();
-            }
+            this.dateFocused = true;
+            (this.$refs.dateField as any).nativeView.focus();
         },
 
         async loadTransactions(): Promise<void> {
@@ -500,15 +353,9 @@ export default defineComponent({
         },
 
         goBack(): void {
-            try {
-                const frame = Frame.topmost();
-                if (frame) {
-                    frame.goBack();
-                } else {
-                    console.error('Frame not found');
-                }
-            } catch (error) {
-                console.error('Navigation back failed:', error);
+            const frame = Frame.topmost();
+            if (frame) {
+                frame.goBack();
             }
         },
 
@@ -518,236 +365,3 @@ export default defineComponent({
     }
 });
 </script>
-
-<style scoped>
-/* Стили остаются без изменений, как в исходном файле */
-.page-category-transactions {
-    background-color: #13131A;
-}
-
-.page-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.spent-amount {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 20;
-}
-
-.planned-amount {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 12;
-}
-
-.remaining-text {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    text-wrap: true;
-}
-
-.transactions-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.transaction-item {
-    background-color: #3F3D5B;
-    border-radius: 12;
-    padding: 12;
-}
-
-.transaction-name {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.transaction-date {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 12;
-    margin-top: 2;
-}
-
-.transaction-amount {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.empty-text {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-}
-
-.add-expense-button {
-    background-color: #964BDC;
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    height: 48;
-    border-radius: 16;
-    width: 100%;
-}
-
-.add-expense-button:highlighted {
-    background-color: #7B3CB0;
-}
-
-.delete-modal {
-    background-color: white;
-    border-radius: 15;
-    padding: 20;
-    width: 90%;
-    max-width: 400;
-}
-
-.delete-modal-text {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 18;
-    text-align: left;
-}
-
-.cancel-text {
-    color: #964BDC;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-
-.delete-text {
-    color: #FF0000;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-
-.add-modal {
-    background-color: #1E1D2E;
-    border-radius: 16;
-    padding: 16;
-    width: 90%;
-    max-width: 400;
-}
-
-.add-modal-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-    text-align: left;
-}
-
-.input-wrapper {
-    width: 100%;
-}
-
-.input-field {
-    background-color: #2F2D44;
-    border-radius: 16;
-    border-width: 2;
-    border-color: #2F2D44;
-    width: 100%;
-    padding: 0 16;
-    align-items: center;
-}
-
-.input-field GridLayout {
-    align-items: center;
-    height: 56;
-}
-
-.input-focused {
-    border-color: #964BDC;
-}
-
-.input-error {
-    border-color: #FF0000;
-}
-
-.input-text {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-    background-color: transparent;
-    padding: 0;
-    placeholder-color: #B4B4B4;
-    vertical-align: middle;
-    height: 56;
-}
-
-.currency-symbol {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-    margin-left: 4;
-}
-
-.error-message {
-    color: #FF0000;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 12;
-    margin-left: 0;
-}
-
-.add-button {
-    height: 56;
-    border-radius: 16;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    color: white;
-    width: 100%;
-}
-
-.add-button.inactive {
-    background-color: #969696;
-}
-
-.add-button.active {
-    background-color: #964BDC;
-}
-
-.add-button.active:highlighted {
-    background-color: #7B3CB0;
-}
-
-.cancel-button-modal {
-    background-color: #FF0000;
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    height: 56;
-    border-radius: 16;
-    width: 100%;
-}
-
-.cancel-button-modal:highlighted {
-    background-color: #CC0000;
-}
-</style>

@@ -1,400 +1,176 @@
 <template>
-    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="page-settings">
-        <GridLayout rows="*" columns="*" backgroundColor="#13131A">
+    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#121212]">
+        <GridLayout rows="*, auto" columns="*" class="bg-[#121212]">
 
-            <!-- Индикатор загрузки -->
-            <GridLayout v-if="isLoading" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#13131A" zIndex="2000">
-                <ActivityIndicator :busy="true" color="#964BDC" width="50" height="50" />
-            </GridLayout>
+            <ScrollView v-if="!isLoading" row="0" col="0">
+                <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pt-8 pb-4">
 
-            <!-- СЛОЙ 1: ОСНОВНОЙ КОНТЕНТ (СКРОЛЛИТСЯ) -->
-            <ScrollView v-else ref="scrollView" row="0" col="0">
-                <FlexboxLayout flexDirection="column" alignItems="stretch" paddingLeft="16" paddingRight="16" paddingBottom="200">
+                    <Label text="Настройки бюджета" class="text-white font-inter font-semibold text-2xl mb-6" />
 
-                    <!-- Верхняя панель с заголовком -->
-                    <GridLayout rows="auto" columns="auto, *" marginTop="16" marginBottom="16">
-                        <Image col="0" src="~/assets/images/back.png"
-                               width="20" height="17"
-                               horizontalAlignment="left"
-                               @tap="goBack" />
+                    <StackLayout class="bg-[#1E1E1E] rounded-3xl px-4 pt-5 pb-1 mb-4">
+                        <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center" class="mb-4">
+                            <Label text="Доходы в этом месяце" class="text-white font-inter font-semibold text-xl" />
+                            <Image src="~/assets/images/plus.png" width="20" height="20" @tap="showAddModal" />
+                        </FlexboxLayout>
 
-                        <Label col="1" text="Настройки бюджета"
-                               class="settings-title"
-                               marginLeft="24"
-                               horizontalAlignment="left" />
-                    </GridLayout>
-
-                    <!-- БЛОК ДОХОДОВ -->
-                    <StackLayout backgroundColor="#2F2D44" borderRadius="16"
-                                paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16">
-
-                        <!-- Заголовок с plus -->
-                        <GridLayout rows="auto" columns="*, auto" marginBottom="16">
-                            <Label col="0" text="Доходы в этом месяце"
-                                   class="income-title"
-                                   horizontalAlignment="left" />
-
-                            <Image col="1" src="~/assets/images/plus.png"
-                                   width="20" height="20"
-                                   verticalAlignment="center"
-                                   @tap="showAddModal" />
-                        </GridLayout>
-
-                        <!-- Картинка и общая сумма доходов -->
-                        <GridLayout rows="auto" columns="auto, *" marginBottom="16">
-                            <Image col="0" src="~/assets/images/money.png"
-                                   width="48" height="48"
-                                   horizontalAlignment="left" />
-
-                            <StackLayout col="1" marginLeft="16" verticalAlignment="center">
-                                <Label :text="formatAmount(totalIncome) + ' ₽'"
-                                       class="income-amount" />
-                                <Label :text="totalIncomeSources + ' ' + getSourceWord(totalIncomeSources)"
-                                       class="income-source" />
+                        <FlexboxLayout flexDirection="row" alignItems="center" class="mb-4">
+                            <Image src="~/assets/images/money.png" width="48" height="48" />
+                            <StackLayout class="ml-4">
+                                <Label :text="formatAmount(totalIncome) + ' ₽'" class="text-white font-inter font-semibold text-xl" />
+                                <Label :text="totalIncomeSources + ' ' + getSourceWord(totalIncomeSources)" class="text-[#8A8A8A] font-inter font-normal text-xs" />
                             </StackLayout>
-                        </GridLayout>
+                        </FlexboxLayout>
 
-                        <!-- Список доходов с возможностью удаления -->
-                        <StackLayout v-for="income in incomes" :key="income.id"
-                                   class="income-item"
-                                   marginBottom="16">
-
-                            <GridLayout rows="auto" columns="*, auto, auto" width="100%">
-                                <!-- Информация о доходе -->
-                                <StackLayout col="0" verticalAlignment="center">
-                                    <Label :text="income.source || 'Без источника'"
-                                           class="income-item-category" />
-                                    <Label :text="formatDate(income.date)"
-                                           class="income-item-date" />
+                        <StackLayout v-for="income in incomes" :key="income.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
+                            <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center">
+                                <StackLayout class="flex-1">
+                                    <Label :text="income.source || 'Без источника'" class="text-white font-inter font-semibold text-sm" />
+                                    <Label :text="formatDate(income.date)" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
                                 </StackLayout>
-
-                                <!-- Сумма дохода -->
-                                <Label col="1" :text="formatAmount(income.amount) + ' ₽'"
-                                       class="income-item-amount"
-                                       marginRight="16"
-                                       verticalAlignment="center" />
-
-                                <!-- Кнопка удаления -->
-                                <Image col="2" src="~/assets/images/trash.png"
-                                       width="18" height="18"
-                                       verticalAlignment="center"
-                                       @tap="showDeleteModal(income)" />
-                            </GridLayout>
+                                <FlexboxLayout flexDirection="row" alignItems="center">
+                                    <Label :text="formatAmount(income.amount) + ' ₽'" class="text-white font-inter font-semibold text-sm mr-4" />
+                                    <Image src="~/assets/images/trash.png" width="24" height="24" @tap="showDeleteModal(income)" />
+                                </FlexboxLayout>
+                            </FlexboxLayout>
                         </StackLayout>
                     </StackLayout>
 
-                    <!-- БЛОК РАСПРЕДЕЛЕНИЯ БЮДЖЕТА (всегда виден) -->
-                    <StackLayout marginTop="16"
-                                backgroundColor="#2F2D44"
-                                borderRadius="16"
-                                paddingLeft="16"
-                                paddingRight="16"
-                                paddingTop="16"
-                                paddingBottom="16">
+                    <StackLayout class="bg-[#1E1E1E] rounded-3xl px-4 pt-5 pb-4 mb-20">
+                        <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center" class="mb-4">
+                            <Label text="Распределение бюджета" class="text-white font-inter font-semibold text-xl" />
+                            <Image src="~/assets/images/plus.png" width="20" height="20" @tap="addNewCategoryFromPlus" />
+                        </FlexboxLayout>
 
-                        <!-- Заголовок с plus всегда виден -->
-                        <GridLayout rows="auto" columns="*, auto" marginBottom="16">
-                            <Label col="0" text="Распределение бюджета"
-                                   class="distribution-title"
-                                   horizontalAlignment="left" />
+                        <StackLayout v-if="showNewCategory" class="bg-[#262626] rounded-2xl p-4 mb-3 border-[#964BDC] border-5 border-dashed">
+                            <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center" class="mb-3">
+                                <Label text="Новая категория" class="text-white font-inter font-semibold text-sm" />
+                                <Image src="~/assets/images/trash.png" width="24" height="24" @tap="cancelNewCategory" />
+                            </FlexboxLayout>
 
-                            <Image col="1" src="~/assets/images/plus.png"
-                                   width="20" height="20"
-                                   verticalAlignment="center"
-                                   @tap="addNewCategoryFromPlus" />
-                        </GridLayout>
-
-                        <!-- Карточки категорий (если есть) -->
-                        <StackLayout v-for="category in distributionCategories" :key="category.id"
-                                   :ref="'category-' + category.id"
-                                   class="distribution-item"
-                                   marginBottom="16">
-
-                            <!-- Верхняя часть с категорией и удалением -->
-                            <GridLayout rows="auto" columns="auto, *, auto" marginBottom="8">
-                                <Image col="0" :src="getCategoryIcon(category.name)"
-                                       width="48" height="48"
-                                       horizontalAlignment="left" />
-
-                                <Label col="1" :text="category.name"
-                                       class="distribution-category"
-                                       marginLeft="8"
-                                       verticalAlignment="center" />
-
-                                <Image col="2" src="~/assets/images/trash.png"
-                                       width="18" height="18"
-                                       verticalAlignment="center"
-                                       @tap="removeCategoryFromDistribution(category)" />
-                            </GridLayout>
-
-                            <!-- Текст-пояснение -->
-                            <Label text="Задайте процент от общего дохода для этой категории расходов"
-                                   class="distribution-description"
-                                   textWrap="true"
-                                   marginBottom="8" />
-
-                            <!-- Поле для ввода процента -->
-                            <GridLayout rows="auto" columns="*"
-                                       class="percent-field"
-                                       :class="{ 'percent-focused': category.focused }"
-                                       paddingLeft="16" paddingRight="16"
-                                       minHeight="56"
-                                       marginBottom="8">
-
-                                <StackLayout>
-                                    <Label text="От 0 до 100 %"
-                                           class="percent-hint"
-                                           :class="{ 'percent-hint-small': category.percent }" />
-
-                                    <TextField v-model="category.percent"
-                                              class="percent-input"
-                                              keyboardType="number"
-                                              maxLength="3"
-                                              @focus="category.focused = true"
-                                              @blur="category.focused = false"
-                                              @textChange="onPercentChange(category)" />
+                            <GridLayout rows="auto" columns="16, *" class="bg-[#454545] rounded-2xl px-4 min-h-14 items-center pt-1 mb-3" @tap="showCategorySelector">
+                                <Image col="0" src="~/assets/images/list.png" width="14" height="14" class="self-center" />
+                                <StackLayout col="1" class="ml-4 py-1">
+                                    <Label text="Категория" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                                    <Label :text="selectedCategoryName || 'Новая категория'" class="text-white font-inter font-medium text-sm" />
                                 </StackLayout>
                             </GridLayout>
 
-                            <!-- Доступная сумма -->
-                            <Label :text="'Будет доступно ' + formatAmount(calculateCategoryAmount(category.percent)) + ' ₽'"
-                                   class="distribution-amount"
-                                   horizontalAlignment="right" />
+                            <Label text="Задайте процент от общего дохода для этой категории расходов" class="text-[#8A8A8A] font-inter font-normal text-xs mb-3" textWrap="true" />
+
+                            <GridLayout rows="auto" columns="*" class="bg-[#454545] rounded-2xl px-4 min-h-14 items-center pt-1 mb-3" :class="newCategoryFocused ? 'border-[#964BDC] border-5' : ''">
+                                <StackLayout class="ml-1 py-1 w-full">
+                                    <Label text="От 0 до 100 %" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                                    <TextField v-model="newCategoryPercent" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="newCategoryFocused = true" @blur="newCategoryFocused = false" @textChange="onNewPercentChange" />
+                                </StackLayout>
+                            </GridLayout>
+
+                            <Label :text="'Будет доступно ' + formatAmount(calculateCategoryAmount(newCategoryPercent)) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs text-right" />
                         </StackLayout>
 
-                        <!-- Новая категория (если открыта) -->
-                        <StackLayout v-if="showNewCategory"
-                                   ref="newCategoryRef"
-                                   class="distribution-item new-category-item"
-                                   marginBottom="16">
+                        <StackLayout v-for="category in distributionCategories" :key="category.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
+                            <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center" class="mb-3">
+                                <FlexboxLayout flexDirection="row" alignItems="center" class="flex-1">
+                                    <Image :src="getCategoryIcon(category.name)" width="40" height="40" />
+                                    <Label :text="category.name" class="text-white font-inter font-semibold text-sm ml-3" />
+                                </FlexboxLayout>
+                                <Image src="~/assets/images/trash.png" width="24" height="24" @tap="showDeleteCategoryModal(category)" />
+                            </FlexboxLayout>
 
-                            <!-- Верхняя часть (без картинки, только текст) -->
-                            <GridLayout rows="auto" columns="*, auto" marginBottom="8">
-                                <Label col="0" text="Новая категория"
-                                       class="distribution-category"
-                                       marginLeft="0"
-                                       verticalAlignment="center" />
+                            <Label text="Задайте процент от общего дохода для этой категории расходов" class="text-[#8A8A8A] font-inter font-normal text-xs mb-3" textWrap="true" />
 
-                                <Image col="1" src="~/assets/images/trash.png"
-                                       width="18" height="18"
-                                       verticalAlignment="center"
-                                       @tap="cancelNewCategory" />
-                            </GridLayout>
-
-                            <!-- Текст-пояснение -->
-                            <Label text="Задайте процент от общего дохода для новой категории расходов"
-                                   class="distribution-description"
-                                   textWrap="true"
-                                   marginBottom="8" />
-
-                            <!-- Поле для ввода процента -->
-                            <GridLayout rows="auto" columns="*"
-                                       class="percent-field"
-                                       :class="{ 'percent-focused': newCategoryFocused }"
-                                       paddingLeft="16" paddingRight="16"
-                                       minHeight="56"
-                                       marginBottom="8">
-
-                                <StackLayout>
-                                    <Label text="От 0 до 100 %"
-                                           class="percent-hint"
-                                           :class="{ 'percent-hint-small': newCategoryPercent }" />
-
-                                    <TextField v-model="newCategoryPercent"
-                                              class="percent-input"
-                                              keyboardType="number"
-                                              maxLength="3"
-                                              @focus="newCategoryFocused = true"
-                                              @blur="newCategoryFocused = false"
-                                              @textChange="onNewPercentChange" />
+                            <GridLayout rows="auto" columns="*" class="bg-[#454545] rounded-2xl px-4 min-h-14 items-center pt-1 mb-3" :class="category.focused ? 'border-[#964BDC] border-5' : ''">
+                                <StackLayout class="ml-1 py-1 w-full">
+                                    <Label text="От 0 до 100 %" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                                    <TextField v-model="category.percent" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="category.focused = true" @blur="category.focused = false" @textChange="onPercentChange(category)" />
                                 </StackLayout>
                             </GridLayout>
 
-                            <!-- Доступная сумма -->
-                            <Label :text="'Будет доступно ' + formatAmount(calculateCategoryAmount(newCategoryPercent)) + ' ₽'"
-                                   class="distribution-amount"
-                                   horizontalAlignment="right" />
-
-                            <!-- Кнопка выбора категории -->
-                            <GridLayout rows="auto" columns="auto, *"
-                                       class="select-category-button"
-                                       @tap="showCategorySelector"
-                                       marginTop="12">
-                                <Image col="0" src="~/assets/images/list.png"
-                                       width="14" height="32"
-                                       marginRight="16" />
-                                <Label col="1" text="Выбрать категорию"
-                                       class="select-category-text" />
-                            </GridLayout>
+                            <Label :text="'Будет доступно ' + formatAmount(calculateCategoryAmount(category.percent)) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs text-right" />
                         </StackLayout>
                     </StackLayout>
-
-                    <!-- Дополнительный отступ для контента -->
-                    <StackLayout height="120" />
-
                 </FlexboxLayout>
             </ScrollView>
 
-            <!-- СЛОЙ 2: СТАТУС БАР И КНОПКИ (ПРИБИТЫ К НИЗУ) -->
-            <GridLayout v-if="distributionCategories.length > 0 || showNewCategory"
-                       row="0" col="0"
-                       rows="auto, auto, auto"
-                       columns="*"
-                       verticalAlignment="bottom"
-                       backgroundColor="#13131A"
-                       borderTopWidth="2"
-                       borderTopColor="#969696"
-                       paddingLeft="16" paddingRight="16" paddingTop="16" paddingBottom="16"
-                       zIndex="10">
+            <ActivityIndicator v-if="isLoading" row="0" col="0" :busy="true" color="#964BDC" class="my-auto" />
 
-                <!-- Статус бар -->
-                <StackLayout row="0" marginBottom="16">
-                    <Label :text="distributionStatusText"
-                           :class="['distribution-status-text', distributionStatusClass]"
-                           horizontalAlignment="right"
-                           marginBottom="8" />
+            <GridLayout row="1" col="0" rows="auto" columns="*" class="bg-[#121212]">
+                <StackLayout>
+                    <StackLayout class="px-4 pt-4 pb-2" v-if="distributionCategories.length > 0 || showNewCategory">
+                        <Label :text="distributionStatusText" :class="['text-right font-inter font-semibold text-sm mb-2', isDistributionValid ? 'text-[#A2E809]' : 'text-[#FF0000]']" />
+                        <GridLayout rows="auto" columns="*" height="4" class="rounded-full overflow-hidden">
+                            <GridLayout col="0" backgroundColor="#454545" height="4" width="100%" borderRadius="2" />
+                            <GridLayout col="0" :backgroundColor="distributionBarColor" :width="distributionPercentage + '%'" height="4" borderRadius="2" horizontalAlignment="left" />
+                        </GridLayout>
+                    </StackLayout>
 
-                    <GridLayout rows="auto" columns="*" height="3">
-                        <GridLayout col="0" backgroundColor="#969696" height="3" width="100%" />
-                        <GridLayout col="0" :backgroundColor="distributionBarColor"
-                                   :width="distributionPercentage + '%'" height="3"
-                                   horizontalAlignment="left" />
-                    </GridLayout>
+                    <StackLayout class="px-4 pb-4" v-if="distributionCategories.length > 0 || showNewCategory">
+                        <Button text="Сохранить" :class="['text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mb-0', isSaveEnabled && !isSaving ? 'bg-[#964BDC]' : 'bg-[#969696]']" :isEnabled="isSaveEnabled && !isSaving" @tap="saveDistribution" />
+                    </StackLayout>
+
+                    <Menu :activeTab="activeTab" @update:activeTab="activeTab = $event" />
                 </StackLayout>
-
-                <!-- Кнопки -->
-                <Button row="1" text="Сохранить"
-                        :class="['save-button', isDistributionValid ? 'active' : 'inactive']"
-                        :isEnabled="isDistributionValid && !isSaving"
-                        @tap="saveDistribution"
-                        marginBottom="16" />
-
-                <Button row="2" text="Отмена"
-                        class="cancel-button"
-                        @tap="closeDistribution" />
             </GridLayout>
 
-            <!-- СЛОЙ 3: МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ ДОХОДА -->
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeDeleteModal"
-                       zIndex="1000" />
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeDeleteModal" zIndex="1000" />
 
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="auto" columns="auto"
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="delete-modal" @tap="preventClose">
-                    <Label text="Удалить доход без возможности восстановления?"
-                           class="delete-modal-text"
-                           textWrap="true"
-                           marginBottom="24" />
-
-                    <FlexboxLayout flexDirection="row" justifyContent="flex-end">
-                        <Label text="Отмена"
-                               class="cancel-text"
-                               marginRight="40"
-                               @tap="closeDeleteModal" />
-
-                        <Label text="Удалить"
-                               class="delete-text"
-                               @tap="confirmDelete" />
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-white rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Удалить доход без возможности восстановления?" class="text-[#8A8A8A] font-inter font-semibold text-base text-left" textWrap="true" />
+                    <FlexboxLayout flexDirection="row" justifyContent="flex-end" class="mt-4">
+                        <Label text="Отмена" class="text-[#964BDC] font-inter font-semibold text-sm py-2 px-4 mr-4" @tap="closeDeleteModal" />
+                        <Label text="Удалить" class="text-[#DE6C35] font-inter font-semibold text-sm py-2 px-4" @tap="confirmDelete" />
                     </FlexboxLayout>
                 </StackLayout>
             </GridLayout>
 
-            <!-- СЛОЙ 4: МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ДОХОДА -->
-            <GridLayout v-if="showAddModalFlag" row="0" col="0" rows="*" columns="*"
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeAddModal"
-                       zIndex="1000" />
+            <GridLayout v-if="showDeleteCategoryModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeDeleteCategoryModal" zIndex="1000" />
 
-            <GridLayout v-if="showAddModalFlag" row="0" col="0" rows="auto" columns="auto"
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="add-modal" @tap="preventClose">
+            <GridLayout v-if="showDeleteCategoryModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-white rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Удалить категорию без возможности восстановления?" class="text-[#8A8A8A] font-inter font-semibold text-base text-left" textWrap="true" />
+                    <FlexboxLayout flexDirection="row" justifyContent="flex-end" class="mt-4">
+                        <Label text="Отмена" class="text-[#964BDC] font-inter font-semibold text-sm py-2 px-4 mr-4" @tap="closeDeleteCategoryModal" />
+                        <Label text="Удалить" class="text-[#DE6C35] font-inter font-semibold text-sm py-2 px-4" @tap="confirmDeleteCategory" />
+                    </FlexboxLayout>
+                </StackLayout>
+            </GridLayout>
 
-                    <!-- Заголовок -->
-                    <Label text="Новый доход"
-                           class="add-modal-title"
-                           marginBottom="16" />
+            <GridLayout v-if="showAddModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeAddModal" zIndex="1000" />
 
-                    <!-- Поле Источник дохода -->
-                    <StackLayout class="input-wrapper" marginBottom="16">
-                        <GridLayout rows="auto" columns="*"
-                                   class="input-field"
-                                   :class="{ 'input-focused': sourceFocused }"
-                                   paddingLeft="16" paddingRight="16"
-                                   height="56">
+            <GridLayout v-if="showAddModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-[#1E1E1E] rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Новый доход" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
 
-                            <TextField v-model="newIncome.source"
-                                      :hint="!newIncome.source ? 'Источник дохода' : ''"
-                                      class="input-text"
-                                      @focus="sourceFocused = true"
-                                      @blur="sourceFocused = false"
-                                      autocorrect="false"
-                                      autocapitalizationType="sentences" />
-                        </GridLayout>
-                    </StackLayout>
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="sourceFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusSource">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Источник дохода" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="sourceField" v-model="newIncome.source" hint="Зарплата" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="sourceFocused = true" @blur="sourceFocused = false" autocorrect="false" />
+                        </StackLayout>
+                    </GridLayout>
 
-                    <!-- Поле Размер дохода с символом ₽ -->
-                    <StackLayout class="input-wrapper" marginBottom="16">
-                        <GridLayout rows="auto" columns="auto, auto"
-                                   class="input-field"
-                                   :class="{ 'input-focused': amountFocused }"
-                                   paddingLeft="16"
-                                   height="56">
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="amountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusAmount">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <FlexboxLayout flexDirection="row" alignItems="center">
+                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
+                                <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
+                            </FlexboxLayout>
+                        </StackLayout>
+                    </GridLayout>
 
-                            <TextField col="0"
-                                      v-model="displayAmount"
-                                      :hint="!newIncome.amount ? '0' : ''"
-                                      class="input-text"
-                                      keyboardType="number"
-                                      :width="amountWidth"
-                                      @focus="amountFocused = true"
-                                      @blur="amountFocused = false" />
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="dateFocused ? 'border-[#964BDC] border-5' : dateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusDate">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Дата" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="dateField" v-model="newIncome.date" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateFocused = true" @blur="validateDate" />
+                        </StackLayout>
+                    </GridLayout>
+                    <Label v-if="dateError" :text="dateError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
 
-                            <Label col="1" text="₽"
-                                   class="currency-symbol"
-                                   verticalAlignment="center" />
-                        </GridLayout>
-                    </StackLayout>
+                    <ActivityIndicator v-if="isAdding" :busy="true" color="#964BDC" class="my-4" />
 
-                    <!-- Поле Дата -->
-                    <StackLayout class="input-wrapper" marginBottom="5">
-                        <GridLayout rows="auto" columns="*"
-                                   class="input-field"
-                                   :class="{ 'input-focused': dateFocused, 'input-error': dateError }"
-                                   paddingLeft="16" paddingRight="16"
-                                   height="56">
+                    <Button v-else text="Добавить доход" :class="['bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-2', !isAddFormValid ? 'bg-[#969696]' : '']" :isEnabled="isAddFormValid" @tap="addNewIncome" />
 
-                            <TextField v-model="newIncome.date"
-                                      :hint="!newIncome.date ? 'ДД.ММ.ГГГГ' : ''"
-                                      class="input-text"
-                                      @focus="dateFocused = true"
-                                      @blur="validateDate" />
-                        </GridLayout>
-
-                        <Label v-if="dateError"
-                               :text="dateError"
-                               class="error-message"
-                               marginTop="4" />
-                    </StackLayout>
-
-                    <!-- Индикатор загрузки при добавлении -->
-                    <ActivityIndicator v-if="isAdding" :busy="true" color="#964BDC" width="50" height="50" />
-
-                    <!-- Кнопки -->
-                    <Button v-else text="Добавить доход"
-                            :class="['add-button', isAddFormValid ? 'active' : 'inactive']"
-                            :isEnabled="isAddFormValid"
-                            @tap="addNewIncome"
-                            marginTop="16" />
-
-                    <Button text="Отмена"
-                            class="cancel-button"
-                            @tap="closeAddModal"
-                            marginTop="16" />
+                    <Button text="Отмена" class="bg-[#DE6C35] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-3" @tap="closeAddModal" />
                 </StackLayout>
             </GridLayout>
 
@@ -404,13 +180,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'nativescript-vue';
-import { $navigateBack, $navigateTo } from 'nativescript-vue';
+import { $navigateTo } from 'nativescript-vue';
+import Menu from './Menu.vue';
 import { IncomesProvider } from '~/providers/income.provider';
 import { CategoriesProvider } from '~/providers/categories.provider';
 import { BudgetProvider } from '~/providers/budget.provider';
 import { Category } from '~/models/categories.types';
 import { Income } from '../models/income.types';
-import MyBudget from './MyBudget.vue';
 import CategorySelector from './CategorySelector.vue';
 
 interface BudgetCategory extends Category {
@@ -420,10 +196,11 @@ interface BudgetCategory extends Category {
 
 export default defineComponent({
     components: {
-        CategorySelector
+        Menu
     },
     data() {
         return {
+            activeTab: 'settings',
             incomesProvider: new IncomesProvider(),
             categoriesProvider: new CategoriesProvider(),
             budgetProvider: new BudgetProvider(),
@@ -438,14 +215,17 @@ export default defineComponent({
             isSaving: false,
 
             showDeleteModalFlag: false,
+            showDeleteCategoryModalFlag: false,
             showAddModalFlag: false,
 
             showNewCategory: false,
             newCategoryPercent: '',
             newCategoryFocused: false,
             selectedCategory: null as Category | null,
+            selectedCategoryName: '',
 
             selectedIncome: null as Income | null,
+            selectedCategoryToDelete: null as BudgetCategory | null,
 
             sourceFocused: false,
             amountFocused: false,
@@ -476,12 +256,6 @@ export default defineComponent({
                 this.newIncome.amount = numericValue;
             }
         },
-        amountWidth(): number {
-            const baseWidth = 20;
-            const charWidth = 8;
-            const length = this.newIncome.amount.length || 1;
-            return baseWidth + (length * charWidth);
-        },
         isAddFormValid(): boolean {
             return this.newIncome.source.trim() !== '' &&
                 this.newIncome.amount.trim() !== '' &&
@@ -507,28 +281,50 @@ export default defineComponent({
         isDistributionValid(): boolean {
             return Math.abs(this.totalDistributionPercent - 100) < 0.01;
         },
+        hasEmptyPercentages(): boolean {
+            const emptyInExisting = this.distributionCategories.some(cat => !cat.percent || cat.percent === '');
+            const emptyInNew = this.showNewCategory && (!this.newCategoryPercent || this.newCategoryPercent === '');
+            return emptyInExisting || emptyInNew;
+        },
+        isSaveEnabled(): boolean {
+            return this.isDistributionValid && !this.hasEmptyPercentages;
+        },
         distributionBarColor(): string {
+            if (this.totalDistributionPercent > 100) {
+                return '#FF0000';
+            }
             return this.isDistributionValid ? '#A2E809' : '#FF0000';
         },
         distributionPercentage(): number {
             return Math.min(this.totalDistributionPercent, 100);
         },
         distributionStatusText(): string {
-            if (this.isDistributionValid) {
+            if (this.totalDistributionPercent > 100) {
+                return `Превышение на ${(this.totalDistributionPercent - 100).toFixed(1)} %`;
+            } else if (this.isDistributionValid) {
                 return '100 %';
             } else {
                 const remaining = this.remainingPercent.toFixed(1);
                 return `Осталось распределить ${remaining} %`;
             }
-        },
-        distributionStatusClass(): string {
-            return this.isDistributionValid ? 'status-green' : 'status-red';
         }
     },
     async mounted() {
         await this.loadData();
     },
     methods: {
+        focusSource() {
+            this.sourceFocused = true;
+            (this.$refs.sourceField as any).nativeView.focus();
+        },
+        focusAmount() {
+            this.amountFocused = true;
+            (this.$refs.amountField as any).nativeView.focus();
+        },
+        focusDate() {
+            this.dateFocused = true;
+            (this.$refs.dateField as any).nativeView.focus();
+        },
         async loadData(): Promise<void> {
             this.isLoading = true;
             try {
@@ -577,7 +373,11 @@ export default defineComponent({
         },
 
         formatAmount(amount: number): string {
-            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            const rounded = Math.round(amount * 100) / 100;
+            return rounded.toLocaleString('ru-RU', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         },
 
         formatDate(date: string): string {
@@ -595,7 +395,13 @@ export default defineComponent({
         },
 
         getCategoryIcon(categoryName: string): string {
-            return '~/assets/images/category.png';
+            const iconMap: Record<string, string> = {
+                'Продукты': 'shop',
+                'Семья': 'family',
+                'Одежда': 'clothes'
+            };
+            const icon = iconMap[categoryName] || 'star';
+            return `~/assets/images/${icon}.png`;
         },
 
         getTodayDate(): string {
@@ -648,90 +454,57 @@ export default defineComponent({
         },
 
         onPercentChange(category: BudgetCategory): void {
-            if (category.percent) {
-                category.percent = category.percent.replace(/[^\d]/g, '');
-            }
-
-            if (!category.percent || category.percent === '') {
+            let value = category.percent;
+            
+            if (value === '' || value === null || value === undefined) {
                 this.calculateDistribution();
                 return;
             }
-
-            if (isNaN(parseInt(category.percent))) {
-                category.percent = '';
-                this.calculateDistribution();
+            
+            let numValue = parseFloat(value);
+            if (isNaN(numValue)) {
+                if (value === '') {
+                    this.calculateDistribution();
+                }
                 return;
             }
-
-            if (category.percent.length > 1 && category.percent.startsWith('0')) {
-                category.percent = parseInt(category.percent).toString();
-            }
-
-            let value = parseInt(category.percent);
-            const otherCategoriesTotal = this.getOtherCategoriesTotal(category.id);
-            const maxAllowed = 100 - otherCategoriesTotal;
-
-            if (value > maxAllowed) {
-                category.percent = maxAllowed.toString();
-            } else if (value < 0) {
-                category.percent = '0';
-            } else if (value > 100) {
-                category.percent = '100';
-            }
-
+            
+            if (numValue < 0) numValue = 0;
+            if (numValue > 100) numValue = 100;
+            
+            category.percent = numValue.toString();
+            
             this.calculateDistribution();
         },
 
         onNewPercentChange(): void {
-            if (this.newCategoryPercent) {
-                this.newCategoryPercent = this.newCategoryPercent.replace(/[^\d]/g, '');
-            }
-
-            if (!this.newCategoryPercent || this.newCategoryPercent === '') {
+            let value = this.newCategoryPercent;
+            
+            if (value === '' || value === null || value === undefined) {
                 this.calculateDistribution();
                 return;
             }
-
-            if (isNaN(parseInt(this.newCategoryPercent))) {
-                this.newCategoryPercent = '';
-                this.calculateDistribution();
+            
+            let numValue = parseFloat(value);
+            if (isNaN(numValue)) {
+                if (value === '') {
+                    this.calculateDistribution();
+                }
                 return;
             }
-
-            if (this.newCategoryPercent.length > 1 && this.newCategoryPercent.startsWith('0')) {
-                this.newCategoryPercent = parseInt(this.newCategoryPercent).toString();
-            }
-
-            let value = parseInt(this.newCategoryPercent);
-            const existingTotal = this.distributionCategories.reduce((sum, cat) => {
-                const val = parseFloat(cat.percent);
-                return sum + (isNaN(val) ? 0 : val);
-            }, 0);
-            const maxAllowed = 100 - existingTotal;
-
-            if (value > maxAllowed) {
-                this.newCategoryPercent = maxAllowed.toString();
-            } else if (value < 0) {
-                this.newCategoryPercent = '0';
-            } else if (value > 100) {
-                this.newCategoryPercent = '100';
-            }
-
+            
+            if (numValue < 0) numValue = 0;
+            if (numValue > 100) numValue = 100;
+            
+            this.newCategoryPercent = numValue.toString();
+            
             this.calculateDistribution();
-        },
-
-        toggleNewCategory(): void {
-            this.showNewCategory = !this.showNewCategory;
-            if (!this.showNewCategory) {
-                this.newCategoryPercent = '';
-                this.newCategoryFocused = false;
-                this.selectedCategory = null;
-            }
         },
 
         addNewCategoryFromPlus(): void {
             this.showNewCategory = true;
             this.newCategoryPercent = '';
+            this.selectedCategoryName = '';
             setTimeout(() => {
                 const scrollView = this.$refs.scrollView as any;
                 if (scrollView && scrollView.nativeView) {
@@ -745,6 +518,7 @@ export default defineComponent({
             this.newCategoryPercent = '';
             this.newCategoryFocused = false;
             this.selectedCategory = null;
+            this.selectedCategoryName = '';
         },
 
         removeCategoryFromDistribution(category: BudgetCategory): void {
@@ -781,6 +555,24 @@ export default defineComponent({
             }
         },
 
+        showDeleteCategoryModal(category: BudgetCategory): void {
+            this.selectedCategoryToDelete = category;
+            this.showDeleteCategoryModalFlag = true;
+        },
+
+        closeDeleteCategoryModal(): void {
+            this.showDeleteCategoryModalFlag = false;
+            this.selectedCategoryToDelete = null;
+        },
+
+        async confirmDeleteCategory(): Promise<void> {
+            if (this.selectedCategoryToDelete) {
+                this.removeCategoryFromDistribution(this.selectedCategoryToDelete);
+                this.closeDeleteCategoryModal();
+                this.calculateDistribution();
+            }
+        },
+
         showAddModal(): void {
             this.resetNewIncome();
             this.showAddModalFlag = true;
@@ -800,7 +592,9 @@ export default defineComponent({
                         if (!category) return;
                         const exists = this.distributionCategories.some(c => c.id === category.id);
                         if (exists) return;
-                        this.distributionCategories.push({
+                        this.selectedCategory = category;
+                        this.selectedCategoryName = category.name;
+                        this.distributionCategories.unshift({
                             ...category,
                             percent: '',
                             focused: false
@@ -810,6 +604,7 @@ export default defineComponent({
                         }
                         this.showNewCategory = false;
                         this.newCategoryPercent = '';
+                        this.calculateDistribution();
                     }
                 }
             });
@@ -859,13 +654,13 @@ export default defineComponent({
         },
 
         async saveDistribution(): Promise<void> {
-            if (!this.isDistributionValid) return;
+            if (!this.isSaveEnabled) return;
 
             this.isSaving = true;
             try {
                 const percentages: Record<string, number> = {};
                 this.distributionCategories.forEach(category => {
-                    const percentValue = parseInt(category.percent);
+                    const percentValue = parseFloat(category.percent);
                     if (category.percent && !isNaN(percentValue) && percentValue > 0) {
                         percentages[category.id.toString()] = percentValue;
                     }
@@ -875,14 +670,17 @@ export default defineComponent({
                     return;
                 }
 
-                const result = await this.budgetProvider.setupBudget({
+                await this.budgetProvider.setupBudget({
                     plannedIncome: this.totalIncome,
                     percentages: percentages
                 });
 
                 await this.budgetProvider.getAlerts();
 
-                $navigateBack();
+                this.$navigateTo(require('./MyBudget.vue').default, {
+                    transition: { name: 'slideLeft', duration: 300 },
+                    clearHistory: true
+                });
             } finally {
                 this.isSaving = false;
             }
@@ -910,369 +708,7 @@ export default defineComponent({
 
         preventClose(event: any): void {
             event.cancelBubble = true;
-        },
-
-        goBack(): void {
-            $navigateBack();
         }
     }
 });
 </script>
-
-<style scoped>
-.page-settings {
-    background-color: #13131A;
-}
-
-.settings-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.income-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.income-amount {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.income-source {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 10;
-    margin-top: 4;
-}
-
-.income-item {
-    background-color: #3F3D5B;
-    border-radius: 12;
-    padding: 12;
-    margin-bottom: 16;
-}
-
-.income-item-category {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-}
-
-.income-item-date {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 12;
-    margin-top: 2;
-}
-
-.income-item-amount {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-}
-
-.distribution-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.distribution-item {
-    background-color: #3F3D5B;
-    border-radius: 12;
-    padding: 16;
-}
-
-.new-category-item {
-    border-width: 2;
-    border-color: #964BDC;
-    border-style: dashed;
-}
-
-.distribution-category {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.distribution-description {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 12;
-    text-wrap: true;
-}
-
-.percent-field {
-    background-color: #2F2D44;
-    border-radius: 16;
-    border-width: 2;
-    border-color: #2F2D44;
-    width: 100%;
-    padding: 8 16;
-}
-
-.percent-field StackLayout {
-    width: 100%;
-}
-
-.percent-focused {
-    border-color: #964BDC;
-}
-
-.percent-hint {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 12;
-    margin-bottom: 2;
-}
-
-.percent-hint-small {
-    font-size: 10;
-}
-
-.percent-input {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    background-color: transparent;
-    padding: 0;
-}
-
-.percent-input TextField {
-    font-size: 14;
-    font-family: 'Inter';
-    font-weight: bold;
-    color: white;
-    background-color: transparent;
-    padding: 0;
-}
-
-.distribution-amount {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.select-category-button {
-    padding: 8 0;
-}
-
-.select-category-text {
-    color: #964BDC;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.distribution-status-text {
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-}
-
-.status-green {
-    color: #A2E809;
-}
-
-.status-red {
-    color: #FF0000;
-}
-
-.save-button {
-    height: 56;
-    border-radius: 16;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    color: white;
-    width: 100%;
-}
-
-.save-button.inactive {
-    background-color: #969696;
-}
-
-.save-button.active {
-    background-color: #964BDC;
-}
-
-.save-button.active:highlighted {
-    background-color: #7B3CB0;
-}
-
-.cancel-button {
-    background-color: #FF0000;
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    height: 56;
-    border-radius: 16;
-    width: 100%;
-}
-
-.cancel-button:highlighted {
-    background-color: #CC0000;
-}
-
-.delete-modal {
-    background-color: white;
-    border-radius: 15;
-    padding: 20;
-    width: 90%;
-    max-width: 400;
-}
-
-.delete-modal-text {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 18;
-    text-align: left;
-}
-
-.cancel-text {
-    color: #964BDC;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-
-.delete-text {
-    color: #FF0000;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-
-.add-modal {
-    background-color: #1E1D2E;
-    border-radius: 16;
-    padding: 16;
-    width: 90%;
-    max-width: 400;
-}
-
-.add-modal-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-    text-align: left;
-}
-
-.input-wrapper {
-    width: 100%;
-}
-
-.input-field {
-    background-color: #2F2D44;
-    border-radius: 16;
-    border-width: 2;
-    border-color: #2F2D44;
-    width: 100%;
-    padding: 0 16;
-    align-items: center;
-}
-
-.input-field GridLayout {
-    align-items: center;
-    height: 56;
-}
-
-.input-focused {
-    border-color: #964BDC;
-}
-
-.input-error {
-    border-color: #FF0000;
-}
-
-.input-text {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-    background-color: transparent;
-    padding: 0;
-    placeholder-color: #B4B4B4;
-    vertical-align: middle;
-    height: 56;
-}
-
-.input-text TextField {
-    font-size: 14;
-    font-family: 'Inter';
-    font-weight: 600;
-    color: white;
-    background-color: transparent;
-    placeholder-color: #B4B4B4;
-    vertical-align: middle;
-    height: 56;
-}
-
-.currency-symbol {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-}
-
-.error-message {
-    color: #FF0000;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 12;
-    margin-left: 0;
-}
-
-.add-button {
-    height: 56;
-    border-radius: 16;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    color: white;
-    width: 100%;
-}
-
-.add-button.inactive {
-    background-color: #969696;
-}
-
-.add-button.active {
-    background-color: #964BDC;
-}
-
-.add-button.active:highlighted {
-    background-color: #7B3CB0;
-}
-
-.popup-text {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 16;
-    text-align: center;
-    width: 100%;
-}
-</style>

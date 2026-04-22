@@ -1,170 +1,84 @@
 <template>
-    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="page-profile">
-        <GridLayout rows="*, auto" columns="*" backgroundColor="#13131A">
-            
-            <!-- СЛОЙ 1: ОСНОВНОЙ КОНТЕНТ (СКРОЛЛИТСЯ) -->
-            <ScrollView row="0" col="0">
-                <FlexboxLayout flexDirection="column" alignItems="stretch" paddingLeft="16" paddingRight="16" paddingBottom="140">
-                    
-                    <!-- Заголовок -->
-                    <Label text="Профиль" 
-                           class="page-title" 
-                           marginTop="16"
-                           marginBottom="24"
-                           horizontalAlignment="left" />
-                    
-                    <!-- Фото профиля -->
-                    <Image src="~/assets/images/photo.png" 
-                           width="93" height="93"
-                           borderRadius="93"
-                           horizontalAlignment="center"
-                           marginBottom="16" />
-                    
-                    <!-- Блок с именем и почтой (фон 2F2D44) -->
-                    <!-- Блок с именем и почтой (фон 2F2D44) -->
-                    <StackLayout class="profile-info-container" backgroundColor="#2F2D44" borderRadius="16" 
-                                paddingTop="16" paddingBottom="16" paddingLeft="16" paddingRight="16"
-                                alignItems="center">
+    <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#121212]">
+        <GridLayout rows="*, auto" columns="*" class="bg-[#121212]">
+
+            <ScrollView v-if="!isLoading" row="0" col="0">
+                <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pt-8 pb-4">
+
+                    <FlexboxLayout  alignItems="center" class="mb-6">
                         
-                        <!-- Имя пользователя с иконкой редактирования -->
-                        <FlexboxLayout flexDirection="row" alignItems="center" justifyContent="center">
-                            <Label :text="userName" 
-                                class="user-name" />
-                            <Image src="~/assets/images/edit.png" 
-                                width="16" height="16"
-                                marginLeft="8"
-                                @tap="showEditNameModal" />
+                        <Label text="Профиль" class="text-white font-inter font-semibold text-2xl ml-1" />
+                    </FlexboxLayout>
+
+                    <Image src="~/assets/images/photo.png" width="93" height="93" borderRadius="93" class="self-center mb-4" />
+
+                    <StackLayout class="bg-[#1E1E1E] rounded-xl px-4 pt-4 pb-4 mb-6">
+                        <FlexboxLayout flexDirection="row" alignItems="center" justifyContent="center" class="mb-2">
+                            <Label :text="userName" class="text-white font-inter font-semibold text-lg text-center" />
+                            <Image src="~/assets/images/edit.png" width="16" height="16" class="ml-2" @tap="showEditNameModal" />
                         </FlexboxLayout>
-                        
-                        <!-- Email пользователя -->
-                        <Label :text="userEmail" 
-                            class="user-email"
-                            marginTop="8" />
+                        <Label :text="userEmail" class="text-[#8A8A8A] font-inter font-normal text-sm text-center" />
                     </StackLayout>
-                    
-                    <!-- Дополнительный отступ для контента -->
-                    <StackLayout height="40" />
-                    
+
                 </FlexboxLayout>
             </ScrollView>
-            
-            <!-- СЛОЙ 2: БЛОК КНОПОК (ПРИБИТ К НИЗУ, НАД МЕНЮ) -->
-            <StackLayout row="0" col="0" 
-                        verticalAlignment="bottom"
-                        backgroundColor="#2F2D44" 
-                        borderRadius="16" 
-                        marginLeft="16" 
-                        marginRight="16" 
-                        marginBottom="16"
-                        paddingTop="8" 
-                        zIndex="10">
-                
-                <!-- Кнопка Выйти из аккаунта -->
-                <GridLayout rows="auto" columns="auto, *" class="action-item" padding="16" @tap="goToLogin">
-                    <Image col="0" src="~/assets/images/exitp.png" 
-                           width="22" height="22" />
-                    <Label col="1" text="Выйти из аккаунта" 
-                           class="action-text"
-                           marginLeft="16" />
-                </GridLayout>
-                
-                <!-- Разделительная линия -->
-                <GridLayout height="2" backgroundColor="#969696" opacity="0.24" />
-                
-                <!-- Кнопка Удалить аккаунт -->
-                <GridLayout rows="auto" columns="auto, *" class="action-item" padding="16" @tap="showDeleteAccountModal">
-                    <Image col="0" src="~/assets/images/trash.png" 
-                           width="22" height="22" />
-                    <Label col="1" text="Удалить аккаунт" 
-                           class="action-text"
-                           marginLeft="16" />
-                </GridLayout>
-            </StackLayout>
-            
-            <!-- СЛОЙ 3: МЕНЮ (ПРИБИТО К НИЗУ) -->
-            <Menu row="1" col="0" 
-                  verticalAlignment="bottom"
-                  :activeTab="activeTab" 
-                  @update:activeTab="activeTab = $event"
-                  zIndex="1" />
-            
-            <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ИМЕНИ -->
-            <GridLayout v-if="showEditModalFlag" row="0" col="0" rows="*" columns="*" 
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeEditModal"
-                       zIndex="1000" />
-            
-            <GridLayout v-if="showEditModalFlag" row="0" col="0" rows="auto" columns="auto" 
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="edit-modal" @tap="preventClose">
-                    
-                    <Label text="Редактировать" 
-                           class="edit-modal-title"
-                           marginBottom="16" />
-                    
-                    <!-- Поле ввода имени -->
-                    <StackLayout class="input-wrapper" marginBottom="16">
-                        <GridLayout rows="auto" columns="*" 
-                                   class="input-field" 
-                                   :class="{ 'input-focused': editNameFocused }"
-                                   paddingLeft="16" paddingRight="16"
-                                   height="56">
-                            <TextField v-model="editName"
-                                      hint="Имя"
-                                      class="input-text"
-                                      @focus="editNameFocused = true"
-                                      @blur="editNameFocused = false" />
-                        </GridLayout>
-                    </StackLayout>
-                    
-                    <!-- Кнопки -->
-                    <Button text="Сохранить" 
-                            :class="['edit-button', isNameChanged ? 'active' : 'inactive']"
-                            :isEnabled="isNameChanged"
-                            @tap="saveName"
-                            marginTop="16" />
-                    
-                    <Button text="Отмена" 
-                            class="cancel-button-modal"
-                            @tap="closeEditModal"
-                            marginTop="16" />
+
+            <ActivityIndicator v-if="isLoading" row="0" col="0" :busy="true" color="#964BDC" class="my-auto" />
+
+            <GridLayout row="1" col="0" rows="auto, auto" columns="*" class="bg-[#121212]">
+                <StackLayout row="0" class="mx-4 mb-4 bg-[#1E1E1E] rounded-xl">
+                    <GridLayout rows="auto" columns="auto, *" class="p-4" @tap="goToLogin">
+                        <Image col="0" src="~/assets/images/exitp.png" width="22" height="22"/>
+                        <Label col="1" text="Выйти из аккаунта" class="text-white font-inter font-semibold text-sm ml-4" />
+                    </GridLayout>
+                    <GridLayout height="1" backgroundColor="#8A8A8A" opacity="0.24" />
+                    <GridLayout rows="auto" columns="auto, *" class="p-4" @tap="showDeleteAccountModal">
+                        <Image col="0" src="~/assets/images/trash.png" width="24" height="24" />
+                        <Label col="1" text="Удалить аккаунт" class="text-white font-inter font-semibold text-sm ml-4" />
+                    </GridLayout>
+                </StackLayout>
+
+                <Menu row="1" col="0" verticalAlignment="bottom" :activeTab="activeTab" @update:activeTab="activeTab = $event" />
+            </GridLayout>
+
+            <GridLayout v-if="showEditModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeEditModal" zIndex="1000" />
+
+            <GridLayout v-if="showEditModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-[#1E1E1E] rounded-xl p-5 w-80" @tap="preventClose">
+                    <Label text="Редактировать" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
+
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-xl px-4 min-h-14 items-center pt-1 mb-4" :class="editNameFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusEditName">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Имя" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="editNameField" v-model="editName" hint="Имя" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="editNameFocused = true" @blur="editNameFocused = false" />
+                        </StackLayout>
+                    </GridLayout>
+
+                    <Button text="Сохранить" :class="['bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-xl w-full mt-2', !isNameChanged ? 'bg-[#969696]' : '']" :isEnabled="isNameChanged" @tap="saveName" />
+
+                    <Button text="Отмена" class="bg-[#DE6C35] text-white font-inter font-semibold text-sm h-12 rounded-xl w-full mt-3" @tap="closeEditModal" />
                 </StackLayout>
             </GridLayout>
-            
-            <!-- МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ АККАУНТА -->
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="*" columns="*" 
-                       backgroundColor="#818181" opacity="0.64"
-                       @tap="closeDeleteModal"
-                       zIndex="1000" />
-            
-            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rows="auto" columns="auto" 
-                       horizontalAlignment="center" verticalAlignment="center"
-                       zIndex="1001">
-                <StackLayout class="delete-modal" @tap="preventClose">
-                    <Label text="Вы уверены, что хотите удалить аккаунт?" 
-                           class="delete-modal-text"
-                           textWrap="true"
-                           marginBottom="24" />
-                    
-                    <FlexboxLayout flexDirection="row" justifyContent="flex-end">
-                        <Label text="Отмена" 
-                               class="cancel-text"
-                               marginRight="40"
-                               @tap="closeDeleteModal" />
-                        <Label text="Удалить" 
-                               class="delete-text"
-                               @tap="confirmDeleteAccount" />
+
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeDeleteModal" zIndex="1000" />
+
+            <GridLayout v-if="showDeleteModalFlag" row="0" col="0" rowSpan="2" horizontalAlignment="center" verticalAlignment="center" zIndex="1001">
+                <StackLayout class="bg-white rounded-3xl p-5 w-80" @tap="preventClose">
+                    <Label text="Вы уверены, что хотите удалить аккаунт?" class="text-[#8A8A8A] font-inter font-semibold text-base text-left" textWrap="true" />
+                    <FlexboxLayout flexDirection="row" justifyContent="flex-end" class="mt-4">
+                        <Label text="Отмена" class="text-[#964BDC] font-inter font-semibold text-sm py-2 px-4 mr-4" @tap="closeDeleteModal" />
+                        <Label text="Удалить" class="text-[#DE6C35] font-inter font-semibold text-sm py-2 px-4" @tap="confirmDeleteAccount" />
                     </FlexboxLayout>
                 </StackLayout>
             </GridLayout>
-            
+
         </GridLayout>
     </Page>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'nativescript-vue';
+import { Frame } from '@nativescript/core';
 import { $navigateTo } from 'nativescript-vue';
 import Menu from './Menu.vue';
 import Login from './Login.vue';
@@ -177,6 +91,7 @@ export default defineComponent({
     data() {
         return {
             activeTab: 'profile',
+            isLoading: false,
             userName: 'Иванов Иван Иванович',
             userEmail: 'ivanov@mail.ru',
             editName: '',
@@ -191,6 +106,16 @@ export default defineComponent({
         }
     },
     methods: {
+        focusEditName() {
+            this.editNameFocused = true;
+            setTimeout(() => {
+                const field = this.$refs.editNameField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
+        },
+        
         showEditNameModal() {
             this.editName = this.userName;
             this.showEditModalFlag = true;
@@ -239,175 +164,16 @@ export default defineComponent({
             });
         },
         
+        goBack() {
+            const frame = Frame.topmost();
+            if (frame) {
+                frame.goBack();
+            }
+        },
+        
         preventClose(event: any) {
             event.cancelBubble = true;
         }
     }
 });
 </script>
-
-<style scoped>
-.page-profile {
-    background-color: #13131A;
-}
-
-.page-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-}
-
-.profile-info-container {
-    background-color: #2F2D44;
-    border-radius: 16;
-    width: 100%;
-}
-
-.user-name {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-    text-align: center;
-}
-
-.user-email {
-    color: #E1E1E1;
-    font-family: 'Inter';
-    font-weight: 500;
-    font-size: 14;
-    text-align: center;
-}
-
-.action-item {
-    width: 100%;
-}
-
-.action-text {
-    color: #FFFFFF;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-}
-
-.edit-modal {
-    background-color: #1E1D2E;
-    border-radius: 16;
-    padding: 16;
-    width: 90%;
-    max-width: 400;
-}
-
-.edit-modal-title {
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 18;
-    text-align: left;
-}
-
-.input-wrapper {
-    width: 100%;
-}
-
-.input-field {
-    background-color: #2F2D44;
-    border-radius: 16;
-    border-width: 2;
-    border-color: #2F2D44;
-    width: 100%;
-    padding: 0 16;
-    align-items: center;
-}
-
-.input-field GridLayout {
-    align-items: center;
-    height: 56;
-}
-
-.input-focused {
-    border-color: #964BDC;
-}
-
-.input-text {
-    color: white;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 14;
-    background-color: transparent;
-    padding: 0;
-    placeholder-color: #B4B4B4;
-    vertical-align: middle;
-    height: 56;
-}
-
-.edit-button {
-    height: 56;
-    border-radius: 16;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    color: white;
-    width: 100%;
-}
-
-.edit-button.inactive {
-    background-color: #969696;
-}
-
-.edit-button.active {
-    background-color: #964BDC;
-}
-
-.edit-button.active:highlighted {
-    background-color: #7B3CB0;
-}
-
-.cancel-button-modal {
-    background-color: #FF0000;
-    color: white;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 14;
-    height: 56;
-    border-radius: 16;
-    width: 100%;
-}
-
-.cancel-button-modal:highlighted {
-    background-color: #CC0000;
-}
-
-.delete-modal {
-    background-color: white;
-    border-radius: 15;
-    padding: 20;
-    width: 90%;
-    max-width: 400;
-}
-
-.delete-modal-text {
-    color: #969696;
-    font-family: 'Inter';
-    font-weight: 600;
-    font-size: 18;
-    text-align: left;
-}
-
-.cancel-text {
-    color: #964BDC;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-
-.delete-text {
-    color: #FF0000;
-    font-family: 'Inter';
-    font-weight: bold;
-    font-size: 16;
-    background-color: transparent;
-}
-</style>
