@@ -5,8 +5,7 @@
             <ScrollView v-if="!isLoading" row="0" col="0">
                 <FlexboxLayout flexDirection="column" alignItems="stretch" class="px-4 pt-8 pb-4">
 
-                    <FlexboxLayout  alignItems="center" class="mb-6">
-                        
+                    <FlexboxLayout alignItems="center" class="mb-6">
                         <Label text="Профиль" class="text-white font-inter font-semibold text-2xl ml-1" />
                     </FlexboxLayout>
 
@@ -27,7 +26,7 @@
 
             <GridLayout row="1" col="0" rows="auto, auto" columns="*" class="bg-[#121212]">
                 <StackLayout row="0" class="mx-4 mb-4 bg-[#1E1E1E] rounded-xl">
-                    <GridLayout rows="auto" columns="auto, *" class="p-4" @tap="goToLogin">
+                    <GridLayout rows="auto" columns="auto, *" class="p-4" @tap="logout">
                         <Image col="0" src="~/assets/images/exitp.png" width="22" height="22"/>
                         <Label col="1" text="Выйти из аккаунта" class="text-white font-inter font-semibold text-sm ml-4" />
                     </GridLayout>
@@ -83,6 +82,8 @@ import { $navigateTo } from 'nativescript-vue';
 import Menu from './Menu.vue';
 import Login from './Login.vue';
 import Registration from './Registration.vue';
+import { ProfileProvider, UserProfile } from '../providers/profile.provider';
+import { TokenService } from '../services/token.service';
 
 export default defineComponent({
     components: {
@@ -92,12 +93,13 @@ export default defineComponent({
         return {
             activeTab: 'profile',
             isLoading: false,
-            userName: 'Иванов Иван Иванович',
-            userEmail: 'ivanov@mail.ru',
+            userName: '',
+            userEmail: '',
             editName: '',
             editNameFocused: false,
             showEditModalFlag: false,
-            showDeleteModalFlag: false
+            showDeleteModalFlag: false,
+            profileProvider: new ProfileProvider()
         };
     },
     computed: {
@@ -105,7 +107,25 @@ export default defineComponent({
             return this.editName.trim() !== '' && this.editName !== this.userName;
         }
     },
+    async mounted() {
+        await this.loadProfile();
+    },
     methods: {
+        async loadProfile() {
+            this.isLoading = true;
+            try {
+                const profile = await this.profileProvider.getProfile();
+                this.userName = profile.name || '';
+                this.userEmail = profile.email;
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            } finally {
+                this.isLoading = false;
+            }
+        },
         focusEditName() {
             this.editNameFocused = true;
             setTimeout(() => {
@@ -115,62 +135,62 @@ export default defineComponent({
                 }
             }, 100);
         },
-        
         showEditNameModal() {
             this.editName = this.userName;
             this.showEditModalFlag = true;
         },
-        
         closeEditModal() {
             this.showEditModalFlag = false;
             this.editName = '';
         },
-        
-        saveName() {
+        async saveName() {
             if (this.isNameChanged) {
-                this.userName = this.editName;
-                console.log('Name updated to:', this.userName);
-                this.closeEditModal();
+                try {
+                    await this.profileProvider.updateProfile({ name: this.editName });
+                    this.userName = this.editName;
+                    this.closeEditModal();
+                } catch (error) {
+                    console.error('Failed to update name:', error);
+                    if (error instanceof Error) {
+                        alert(error.message);
+                    }
+                }
             }
         },
-        
         showDeleteAccountModal() {
             this.showDeleteModalFlag = true;
         },
-        
         closeDeleteModal() {
             this.showDeleteModalFlag = false;
         },
-        
-        confirmDeleteAccount() {
-            console.log('Account deleted');
-            this.closeDeleteModal();
-            $navigateTo(Registration, {
-                transition: {
-                    name: 'fade',
-                    duration: 300
-                },
-                clearHistory: true
-            });
+        async confirmDeleteAccount() {
+            try {
+                await this.profileProvider.deleteAccount();
+                this.closeDeleteModal();
+                $navigateTo(Registration, {
+                    transition: { name: 'fade', duration: 300 },
+                    clearHistory: true
+                });
+            } catch (error) {
+                console.error('Failed to delete account:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            }
         },
-        
-        goToLogin() {
+        logout() {
+            TokenService.clear();
             $navigateTo(Login, {
-                transition: {
-                    name: 'fade',
-                    duration: 300
-                },
+                transition: { name: 'fade', duration: 300 },
                 clearHistory: true
             });
         },
-        
         goBack() {
             const frame = Frame.topmost();
             if (frame) {
                 frame.goBack();
             }
         },
-        
         preventClose(event: any) {
             event.cancelBubble = true;
         }

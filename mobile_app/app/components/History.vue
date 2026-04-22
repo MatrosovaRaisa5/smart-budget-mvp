@@ -32,10 +32,10 @@
                         <StackLayout v-for="transaction in groupedTransactions.today" :key="transaction.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
                             <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center">
                                 <FlexboxLayout flexDirection="row" alignItems="center" class="flex-1">
-                                    <Image :src="getCategoryIcon(transaction.categoryName)" width="40" height="40" />
+                                    <Image :src="getCategoryIcon(transaction.category.name)" width="40" height="40" />
                                     <StackLayout class="ml-3">
-                                        <Label :text="transaction.name" class="text-white font-inter font-semibold text-sm" />
-                                        <Label :text="transaction.date" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
+                                        <Label :text="transaction.description" class="text-white font-inter font-semibold text-sm" />
+                                        <Label :text="formatDate(transaction.date)" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
                                     </StackLayout>
                                 </FlexboxLayout>
                                 <FlexboxLayout flexDirection="row" alignItems="center">
@@ -51,10 +51,10 @@
                         <StackLayout v-for="transaction in groupedTransactions.yesterday" :key="transaction.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
                             <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center">
                                 <FlexboxLayout flexDirection="row" alignItems="center" class="flex-1">
-                                    <Image :src="getCategoryIcon(transaction.categoryName)" width="40" height="40" />
+                                    <Image :src="getCategoryIcon(transaction.category.name)" width="40" height="40" />
                                     <StackLayout class="ml-3">
-                                        <Label :text="transaction.name" class="text-white font-inter font-semibold text-sm" />
-                                        <Label :text="transaction.date" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
+                                        <Label :text="transaction.description" class="text-white font-inter font-semibold text-sm" />
+                                        <Label :text="formatDate(transaction.date)" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
                                     </StackLayout>
                                 </FlexboxLayout>
                                 <FlexboxLayout flexDirection="row" alignItems="center">
@@ -70,10 +70,10 @@
                         <StackLayout v-for="transaction in groupedTransactions.earlier" :key="transaction.id" class="bg-[#262626] rounded-2xl p-4 mb-3">
                             <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center">
                                 <FlexboxLayout flexDirection="row" alignItems="center" class="flex-1">
-                                    <Image :src="getCategoryIcon(transaction.categoryName)" width="40" height="40" />
+                                    <Image :src="getCategoryIcon(transaction.category.name)" width="40" height="40" />
                                     <StackLayout class="ml-3">
-                                        <Label :text="transaction.name" class="text-white font-inter font-semibold text-sm" />
-                                        <Label :text="transaction.date" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
+                                        <Label :text="transaction.description" class="text-white font-inter font-semibold text-sm" />
+                                        <Label :text="formatDate(transaction.date)" class="text-[#8A8A8A] font-inter font-normal text-xs mt-1" />
                                     </StackLayout>
                                 </FlexboxLayout>
                                 <FlexboxLayout flexDirection="row" alignItems="center">
@@ -92,21 +92,19 @@
 
             <GridLayout row="1" col="0" rows="auto, auto" columns="*" class="bg-[#121212]">
                 <StackLayout row="0" class="px-4 pb-4">
-                    <Button 
-                        text="Добавить трату" 
-                        class="bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full" 
+                    <Button
+                        text="Добавить трату"
+                        class="bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full"
                         @tap="showAddExpenseModal" />
                 </StackLayout>
 
-                <Menu 
-                    row="1" 
-                    col="0" 
-                    verticalAlignment="bottom" 
-                    :activeTab="activeTab" 
+                <Menu
+                    row="1"
+                    col="0"
+                    verticalAlignment="bottom"
+                    :activeTab="activeTab"
                     @update:activeTab="activeTab = $event" />
-
             </GridLayout>
-
 
             <GridLayout v-if="showFilterModalFlag" row="0" col="0" rowSpan="2" backgroundColor="#818181" opacity="0.64" @tap="closeFilterModal" zIndex="1000" />
 
@@ -116,11 +114,11 @@
 
                     <ScrollView height="auto" maxHeight="60%">
                         <StackLayout>
-                            <GridLayout v-for="category in availableCategories" :key="category" rows="auto" columns="auto, *" class="mb-3 items-center" @tap="toggleFilter(category)">
-                                <GridLayout col="0" width="20" height="20" class="rounded-full border-5 mr-3 items-center justify-center" :class="isFilterActive(category) ? 'border-[#964BDC] bg-[#964BDC]' : 'border-[#8A8A8A]'">
-                                    <Label v-if="isFilterActive(category)" text="✓" color="white" fontSize="12" fontWeight="bold" textAlignment="center" verticalAlignment="center" />
+                            <GridLayout v-for="category in availableCategories" :key="category.id" rows="auto" columns="auto, *" class="mb-3 items-center" @tap="toggleFilter(category)">
+                                <GridLayout col="0" width="20" height="20" class="rounded-full border-5 mr-3 items-center justify-center" :class="isFilterActive(category.name) ? 'border-[#964BDC] bg-[#964BDC]' : 'border-[#8A8A8A]'">
+                                    <Label v-if="isFilterActive(category.name)" text="✓" color="white" fontSize="12" fontWeight="bold" textAlignment="center" verticalAlignment="center" />
                                 </GridLayout>
-                                <Label col="1" :text="category" class="text-white font-inter font-semibold text-sm" />
+                                <Label col="1" :text="category.name" class="text-white font-inter font-semibold text-sm" />
                             </GridLayout>
                         </StackLayout>
                     </ScrollView>
@@ -156,7 +154,7 @@
                         <Image col="0" src="~/assets/images/list.png" width="14" height="14" class="self-center" />
                         <StackLayout col="1" class="ml-4 py-1">
                             <Label text="Категория" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
-                            <Label :text="newExpense.category || 'Выберите категорию'" class="text-white font-inter font-medium text-sm" />
+                            <Label :text="newExpense.categoryName || 'Выберите категорию'" class="text-white font-inter font-medium text-sm" />
                         </StackLayout>
                     </GridLayout>
 
@@ -198,7 +196,10 @@ import { Frame } from '@nativescript/core';
 import { $navigateTo } from 'nativescript-vue';
 import Menu from './Menu.vue';
 import CategorySelector from './CategorySelector.vue';
-import { getAllTransactions, addTransaction, searchTransactions, groupTransactionsByDate, Transaction } from './data/transactions';
+import { TransactionsProvider } from '../providers/transactions.provider';
+import { CategoriesProvider } from '../providers/categories.provider';
+import { Transaction, CategoryInfo } from '../models/transactions.types';
+import { Category } from '../models/categories.types';
 
 export default defineComponent({
     components: {
@@ -217,7 +218,7 @@ export default defineComponent({
             searchText: '',
             searchFocused: false,
             activeFilters: [] as string[],
-            availableCategories: ['Продукты', 'Кафе', 'Транспорт', 'Развлечения', 'Здоровье', 'Покупки'],
+            availableCategories: [] as Category[],
             isLoading: false,
             isAdding: false,
             isDeleting: false,
@@ -226,16 +227,18 @@ export default defineComponent({
             showDeleteModalFlag: false,
             nameFocused: false,
             amountFocused: false,
-            categoryFocused: false,
             dateFocused: false,
             dateError: '',
             newExpense: {
                 name: '',
                 amount: '',
-                category: '',
+                categoryId: null as number | null,
+                categoryName: '',
                 date: this.getTodayDate()
             },
-            selectedTransaction: null as Transaction | null
+            selectedTransaction: null as Transaction | null,
+            transactionsProvider: new TransactionsProvider(),
+            categoriesProvider: new CategoriesProvider()
         };
     },
     computed: {
@@ -244,10 +247,10 @@ export default defineComponent({
             set(value: string) { this.newExpense.amount = value.replace(/[^\d]/g, ''); }
         },
         isFormValid(): boolean {
-            return this.newExpense.name.trim() !== '' && 
-                   this.newExpense.amount !== '' && 
+            return this.newExpense.name.trim() !== '' &&
+                   this.newExpense.amount !== '' &&
                    parseFloat(this.newExpense.amount) > 0 &&
-                   this.newExpense.category.trim() !== '' &&
+                   this.newExpense.categoryId !== null &&
                    !this.dateError &&
                    this.isValidDate(this.newExpense.date);
         },
@@ -255,8 +258,8 @@ export default defineComponent({
             return this.filteredTransactions.length;
         }
     },
-    created() {
-        this.loadTransactions();
+    async mounted() {
+        await this.loadData();
     },
     methods: {
         getTodayDate(): string {
@@ -298,30 +301,98 @@ export default defineComponent({
             }
         },
 
-        loadTransactions() {
-            this.allTransactions = getAllTransactions();
-            this.applyFiltersAndSearch();
+        async loadData() {
+            this.isLoading = true;
+            try {
+                await Promise.all([this.loadTransactions(), this.loadCategories()]);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async loadTransactions() {
+            try {
+                this.allTransactions = await this.transactionsProvider.getTransactions();
+                this.applyFiltersAndSearch();
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+                this.allTransactions = [];
+            }
+        },
+
+        async loadCategories() {
+            try {
+                this.availableCategories = await this.categoriesProvider.getCategories();
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                this.availableCategories = [];
+            }
         },
 
         applyFiltersAndSearch() {
             let filtered = [...this.allTransactions];
-            
+
             if (this.searchText) {
-                filtered = searchTransactions(this.searchText);
-            }
-            
-            if (this.activeFilters.length > 0) {
-                filtered = filtered.filter(t => 
-                    this.activeFilters.includes(t.categoryName || '')
+                const searchLower = this.searchText.toLowerCase();
+                filtered = filtered.filter(t =>
+                    t.description.toLowerCase().includes(searchLower) ||
+                    (t.category && t.category.name.toLowerCase().includes(searchLower))
                 );
             }
-            
+
+            if (this.activeFilters.length > 0) {
+                filtered = filtered.filter(t =>
+                    t.category && this.activeFilters.includes(t.category.name)
+                );
+            }
+
             this.filteredTransactions = filtered;
-            this.groupedTransactions = groupTransactionsByDate(this.filteredTransactions);
+            this.groupedTransactions = this.groupTransactionsByDate(this.filteredTransactions);
         },
 
-        onSearchChange() {
-            this.applyFiltersAndSearch();
+        groupTransactionsByDate(transactions: Transaction[]) {
+            const today = new Date();
+            const todayStr = this.formatDateForGroup(today);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = this.formatDateForGroup(yesterday);
+
+            const todayTransactions: Transaction[] = [];
+            const yesterdayTransactions: Transaction[] = [];
+            const earlierTransactions: Transaction[] = [];
+
+            transactions.forEach(t => {
+                const tDate = this.formatDateForGroup(new Date(t.date));
+                if (tDate === todayStr) {
+                    todayTransactions.push(t);
+                } else if (tDate === yesterdayStr) {
+                    yesterdayTransactions.push(t);
+                } else {
+                    earlierTransactions.push(t);
+                }
+            });
+
+            return {
+                today: todayTransactions,
+                yesterday: yesterdayTransactions,
+                earlier: earlierTransactions
+            };
+        },
+
+        formatDateForGroup(date: Date): string {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        },
+
+        formatDate(dateString: string): string {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
         },
 
         formatAmount(amount: number): string {
@@ -332,6 +403,10 @@ export default defineComponent({
             }).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         },
 
+        onSearchChange() {
+            this.applyFiltersAndSearch();
+        },
+
         showFilterModal() {
             this.showFilterModalFlag = true;
         },
@@ -340,16 +415,16 @@ export default defineComponent({
             this.showFilterModalFlag = false;
         },
 
-        isFilterActive(category: string): boolean {
-            return this.activeFilters.includes(category);
+        isFilterActive(categoryName: string): boolean {
+            return this.activeFilters.includes(categoryName);
         },
 
-        toggleFilter(category: string) {
-            const index = this.activeFilters.indexOf(category);
+        toggleFilter(category: Category) {
+            const index = this.activeFilters.indexOf(category.name);
             if (index !== -1) {
                 this.activeFilters.splice(index, 1);
             } else {
-                this.activeFilters.push(category);
+                this.activeFilters.push(category.name);
             }
         },
 
@@ -380,11 +455,14 @@ export default defineComponent({
             if (!this.selectedTransaction) return;
             this.isDeleting = true;
             try {
-                await this.$deleteTransaction(this.selectedTransaction.id);
-                this.loadTransactions();
+                await this.transactionsProvider.deleteTransaction(this.selectedTransaction.id);
+                await this.loadTransactions();
                 this.closeDeleteModal();
             } catch (error) {
                 console.error('Failed to delete transaction:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
             } finally {
                 this.isDeleting = false;
             }
@@ -404,12 +482,12 @@ export default defineComponent({
             this.newExpense = {
                 name: '',
                 amount: '',
-                category: '',
+                categoryId: null,
+                categoryName: '',
                 date: this.getTodayDate()
             };
             this.nameFocused = false;
             this.amountFocused = false;
-            this.categoryFocused = false;
             this.dateFocused = false;
             this.dateError = '';
         },
@@ -433,28 +511,35 @@ export default defineComponent({
             $navigateTo(CategorySelector, {
                 transition: { name: 'slideLeft', duration: 300 },
                 props: {
-                    allCategories: [],
-                    onCategorySelected: (category: any) => {
-                        if (category && category.name) {
-                            this.newExpense.category = category.name;
+                    onCategorySelected: (category: Category) => {
+                        if (category && category.id) {
+                            this.newExpense.categoryId = category.id;
+                            this.newExpense.categoryName = category.name;
                         }
                     }
                 }
             });
         },
 
-        addNewExpense() {
-            if (this.isFormValid) {
-                const newTransaction = addTransaction({
-                    name: this.newExpense.name,
+        async addNewExpense() {
+            if (!this.isFormValid) return;
+            this.isAdding = true;
+            try {
+                await this.transactionsProvider.addTransaction({
                     amount: parseFloat(this.newExpense.amount),
-                    date: this.newExpense.date,
-                    categoryId: 0,
-                    categoryName: this.newExpense.category
+                    description: this.newExpense.name,
+                    categoryId: this.newExpense.categoryId!,
+                    date: this.newExpense.date
                 });
-                this.loadTransactions();
+                await this.loadTransactions();
                 this.closeAddModal();
-                console.log('New expense added:', newTransaction);
+            } catch (error) {
+                console.error('Failed to add transaction:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            } finally {
+                this.isAdding = false;
             }
         },
 
@@ -467,10 +552,6 @@ export default defineComponent({
 
         preventClose(event: any) {
             event.cancelBubble = true;
-        },
-
-        $deleteTransaction(id: number): Promise<void> {
-            return Promise.resolve();
         }
     }
 });

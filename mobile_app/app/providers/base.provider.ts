@@ -2,8 +2,8 @@ import { TokenService } from '../services/token.service';
 
 export class BaseProvider {
     // Для деплоя нужно будет менять на:
-    protected baseUrl: string = 'http://87.228.40.213:8080/api';
-    //protected baseUrl: string = 'http://10.0.2.2:8080/api';
+    // protected baseUrl: string = 'http://87.228.40.213:8080/api';
+    protected baseUrl: string = 'http://10.0.2.2:8080/api';
 
     protected async request<T>(
         endpoint: string,

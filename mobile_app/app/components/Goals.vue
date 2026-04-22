@@ -27,8 +27,9 @@
                             </GridLayout>
 
                             <StackLayout>
-                                <Label :text="'Осталось ' + formatAmount(goal.targetAmount - goal.currentAmount) + ' ₽'" class="text-white font-inter font-semibold text-sm text-right" />
-                                <Label :text="'Цель ' + formatAmount(goal.targetAmount) + ' ₽ до ' + formatDate(goal.targetDate)" class="text-[#8A8A8A] font-inter font-normal text-xs text-right mt-1" />
+                                <Label v-if="goal.targetAmount - goal.savedAmount <= 0" text="Цель достигнута" class="text-[#A2E809] font-inter font-semibold text-sm text-right" />
+                                <Label v-else :text="'Осталось ' + formatAmount(goal.targetAmount - goal.savedAmount) + ' ₽'" class="text-white font-inter font-semibold text-sm text-right" />
+                                <Label :text="'Цель ' + formatAmount(goal.targetAmount) + ' ₽ до ' + formatDate(goal.deadline)" class="text-[#8A8A8A] font-inter font-normal text-xs text-right mt-1" />
                             </StackLayout>
                         </StackLayout>
                     </StackLayout>
@@ -85,7 +86,7 @@
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="dateFocused ? 'border-[#964BDC] border-5' : dateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusDate">
                         <StackLayout class="ml-1 py-1 w-full">
                             <Label text="Дата" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
-                            <TextField ref="dateField" v-model="newGoal.targetDate" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateFocused = true" @blur="validateDate" />
+                            <TextField ref="dateField" v-model="newGoal.deadline" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateFocused = true" @blur="validateDate" />
                         </StackLayout>
                     </GridLayout>
                     <Label v-if="dateError" :text="dateError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
@@ -136,7 +137,7 @@
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="editDateFocused ? 'border-[#964BDC] border-5' : editDateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusEditDate">
                         <StackLayout class="ml-1 py-1 w-full">
                             <Label text="Дата" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
-                            <TextField ref="editDateField" v-model="editingGoal.targetDate" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="editDateFocused = true" @blur="validateEditDate" />
+                            <TextField ref="editDateField" v-model="editingGoal.deadline" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="editDateFocused = true" @blur="validateEditDate" />
                         </StackLayout>
                     </GridLayout>
                     <Label v-if="editDateError" :text="editDateError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
@@ -226,7 +227,8 @@
 import { defineComponent } from 'nativescript-vue';
 import { Frame } from '@nativescript/core';
 import Menu from './Menu.vue';
-import { getGoals, addGoal, updateGoal, removeGoal, depositToGoal, Goal } from './data/goals';
+import { GoalsProvider } from '../providers/goals.provider';
+import { SavingsGoal } from '../models/goals.types';
 
 export default defineComponent({
     components: {
@@ -235,42 +237,44 @@ export default defineComponent({
     data() {
         return {
             activeTab: 'goals',
-            goals: [] as Goal[],
+            goals: [] as SavingsGoal[],
             isLoading: true,
             isAdding: false,
             showWelcomePopup: true,
-            
+
             showAddModalFlag: false,
             showEditModalFlag: false,
             showDepositModalFlag: false,
             showDeleteModalFlag: false,
             showActionModalFlag: false,
-            selectedActionGoal: null as Goal | null,
-            
+            selectedActionGoal: null as SavingsGoal | null,
+
             nameFocused: false,
             targetAmountFocused: false,
             dateFocused: false,
             currentAmountFocused: false,
             dateError: '',
-            
+
             newGoal: {
                 name: '',
                 targetAmount: '',
-                targetDate: this.getTodayDate(),
-                currentAmount: ''
+                deadline: this.getTodayDate(),
+                savedAmount: ''
             },
-            
-            editingGoal: {} as Goal,
+
+            editingGoal: {} as SavingsGoal,
             editNameFocused: false,
             editTargetAmountFocused: false,
             editDateFocused: false,
             editCurrentAmountFocused: false,
             editDateError: '',
-            
+
             depositAmount: '',
             depositAmountFocused: false,
             selectedGoalId: null as number | null,
-            deleteGoalId: null as number | null
+            deleteGoalId: null as number | null,
+
+            goalsProvider: new GoalsProvider()
         };
     },
     computed: {
@@ -279,16 +283,16 @@ export default defineComponent({
             set(value: string) { this.newGoal.targetAmount = value.replace(/[^\d]/g, ''); }
         },
         displayCurrentAmount: {
-            get(): string { return this.newGoal.currentAmount; },
-            set(value: string) { this.newGoal.currentAmount = value.replace(/[^\d]/g, ''); }
+            get(): string { return this.newGoal.savedAmount; },
+            set(value: string) { this.newGoal.savedAmount = value.replace(/[^\d]/g, ''); }
         },
         displayEditTargetAmount: {
             get(): string { return this.editingGoal.targetAmount?.toString() || ''; },
             set(value: string) { if (this.editingGoal) this.editingGoal.targetAmount = parseFloat(value.replace(/[^\d]/g, '')); }
         },
         displayEditCurrentAmount: {
-            get(): string { return this.editingGoal.currentAmount?.toString() || ''; },
-            set(value: string) { if (this.editingGoal) this.editingGoal.currentAmount = parseFloat(value.replace(/[^\d]/g, '')); }
+            get(): string { return this.editingGoal.savedAmount?.toString() || ''; },
+            set(value: string) { if (this.editingGoal) this.editingGoal.savedAmount = parseFloat(value.replace(/[^\d]/g, '')); }
         },
         displayDepositAmount: {
             get(): string { return this.depositAmount; },
@@ -298,27 +302,27 @@ export default defineComponent({
             return this.newGoal.name.trim() !== '' &&
                    parseFloat(this.newGoal.targetAmount) > 0 &&
                    !this.dateError &&
-                   this.isValidDate(this.newGoal.targetDate);
+                   this.isValidDate(this.newGoal.deadline);
         },
         isEditGoalValid(): boolean {
             return this.editingGoal.name?.trim() !== '' &&
                    (this.editingGoal.targetAmount || 0) > 0 &&
                    !this.editDateError &&
-                   this.isValidDate(this.editingGoal.targetDate);
+                   this.isValidDate(this.editingGoal.deadline);
         },
         calculatedMonthly(): number {
             const target = parseFloat(this.newGoal.targetAmount) || 0;
-            const current = parseFloat(this.newGoal.currentAmount) || 0;
-            const months = this.getMonthsDifference(this.newGoal.targetDate);
+            const current = parseFloat(this.newGoal.savedAmount) || 0;
+            const months = this.getMonthsDifference(this.newGoal.deadline);
             if (months <= 0) return 0;
-            return Math.ceil((target - current) / months);
+            return Math.max(0, Math.ceil((target - current) / months));
         }
     },
     async mounted() {
         await this.loadData();
     },
     methods: {
-        showActionModal(goal: Goal) {
+        showActionModal(goal: SavingsGoal) {
             this.selectedActionGoal = goal;
             this.showActionModalFlag = true;
         },
@@ -437,12 +441,32 @@ export default defineComponent({
         async loadData() {
             this.isLoading = true;
             try {
-                this.goals = getGoals();
+                let fetchedGoals = await this.goalsProvider.getGoals();
+                // Преобразуем deadline из ISO (ГГГГ-ММ-ДД) в ДД.ММ.ГГГГ для единого формата
+                this.goals = fetchedGoals.map(goal => ({
+                    ...goal,
+                    deadline: this.convertToDisplayDate(goal.deadline)
+                }));
+            } catch (error) {
+                console.error('Failed to load goals:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+                this.goals = [];
             } finally {
                 this.isLoading = false;
             }
         },
-        
+
+        convertToDisplayDate(dateString: string): string {
+            if (!dateString) return '';
+            const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (isoMatch) {
+                return `${isoMatch[3]}.${isoMatch[2]}.${isoMatch[1]}`;
+            }
+            return dateString;
+        },
+
         formatAmount(amount: number): string {
             const rounded = Math.round(amount * 100) / 100;
             return rounded.toLocaleString('ru-RU', {
@@ -450,14 +474,19 @@ export default defineComponent({
                 maximumFractionDigits: 2
             }).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         },
-        
+
         formatDate(dateString: string): string {
             if (!dateString) return '';
-            const parts = dateString.split('.');
-            if (parts.length === 3) return `${parts[0]}.${parts[1]}.${parts[2]}`;
+            const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (isoMatch) {
+                return `${isoMatch[3]}.${isoMatch[2]}.${isoMatch[1]}`;
+            }
+            if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+                return dateString;
+            }
             return dateString;
         },
-        
+
         getTodayDate(): string {
             const today = new Date();
             const day = String(today.getDate()).padStart(2, '0');
@@ -465,7 +494,7 @@ export default defineComponent({
             const year = today.getFullYear();
             return `${day}.${month}.${year}`;
         },
-        
+
         isValidDate(dateString: string): boolean {
             const regex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/;
             if (!regex.test(dateString)) return false;
@@ -473,7 +502,7 @@ export default defineComponent({
             const date = new Date(year, month - 1, day);
             return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
         },
-        
+
         getMonthsDifference(dateString: string): number {
             if (!this.isValidDate(dateString)) return 0;
             const [day, month, year] = dateString.split('.').map(Number);
@@ -482,148 +511,178 @@ export default defineComponent({
             const months = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
             return months > 0 ? months : 0;
         },
-        
-        calculateMonthly(goal: Goal): number {
-            const months = this.getMonthsDifference(goal.targetDate);
+
+        calculateMonthly(goal: SavingsGoal): number {
+            const months = this.getMonthsDifference(goal.deadline);
             if (months <= 0) return 0;
-            return Math.ceil((goal.targetAmount - goal.currentAmount) / months);
+            const needed = goal.targetAmount - goal.savedAmount;
+            if (needed <= 0) return 0;
+            return Math.max(0, Math.ceil(needed / months));
         },
-        
-        getProgressPercent(goal: Goal): number {
+
+        getProgressPercent(goal: SavingsGoal): number {
             if (goal.targetAmount === 0) return 0;
-            return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+            return Math.min((goal.savedAmount / goal.targetAmount) * 100, 100);
         },
-        
-        getProgressColor(goal: Goal): string {
+
+        getProgressColor(goal: SavingsGoal): string {
             const percent = this.getProgressPercent(goal);
             if (percent >= 100) return '#A2E809';
             if (percent >= 80) return '#A2E809';
             if (percent >= 50) return '#FF5E00';
             return '#FF0000';
         },
-        
+
         validateDate() {
             this.dateFocused = false;
-            if (!this.isValidDate(this.newGoal.targetDate)) {
+            if (!this.isValidDate(this.newGoal.deadline)) {
                 this.dateError = 'Введите корректную дату';
             } else {
                 this.dateError = '';
             }
         },
-        
+
         validateEditDate() {
             this.editDateFocused = false;
-            if (!this.isValidDate(this.editingGoal.targetDate)) {
+            if (!this.isValidDate(this.editingGoal.deadline)) {
                 this.editDateError = 'Введите корректную дату';
             } else {
                 this.editDateError = '';
             }
         },
-        
+
         closeWelcomePopup() {
             this.showWelcomePopup = false;
         },
-        
+
         showAddModalFromWelcome() {
             this.showWelcomePopup = false;
             this.showAddModal();
         },
-        
+
         showAddModal() {
-            this.newGoal = { name: '', targetAmount: '', targetDate: this.getTodayDate(), currentAmount: '' };
+            this.newGoal = { name: '', targetAmount: '', deadline: this.getTodayDate(), savedAmount: '' };
             this.dateError = '';
             this.showAddModalFlag = true;
         },
-        
+
         closeAddModal() {
             this.showAddModalFlag = false;
         },
-        
-        addGoal() {
+
+        async addGoal() {
             if (!this.isAddGoalValid) return;
             this.isAdding = true;
             try {
-                addGoal({
-                    name: this.newGoal.name,
+                const savedAmount = parseFloat(this.newGoal.savedAmount) || 0;
+                await this.goalsProvider.createGoal({
+                    name: this.newGoal.name.trim(),
                     targetAmount: parseFloat(this.newGoal.targetAmount),
-                    targetDate: this.newGoal.targetDate,
-                    currentAmount: parseFloat(this.newGoal.currentAmount) || 0
+                    savedAmount: savedAmount,
+                    deadline: this.newGoal.deadline
                 });
-                this.loadData();
+                await this.loadData();
                 this.closeAddModal();
+            } catch (error) {
+                console.error('Failed to add goal:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
             } finally {
                 this.isAdding = false;
             }
         },
-        
-        showEditModal(goal: Goal) {
+
+        showEditModal(goal: SavingsGoal) {
             if (!goal || !goal.id) return;
+            // Копируем цель, deadline уже в ДД.ММ.ГГГГ после преобразования в loadData
             this.editingGoal = { ...goal };
             this.showEditModalFlag = true;
         },
-        
+
         closeEditModal() {
             this.showEditModalFlag = false;
         },
-        
-        updateGoal() {
+
+        async updateGoal() {
             if (!this.isEditGoalValid) return;
-            updateGoal(this.editingGoal.id, {
-                name: this.editingGoal.name,
-                targetAmount: this.editingGoal.targetAmount,
-                targetDate: this.editingGoal.targetDate,
-                currentAmount: this.editingGoal.currentAmount
-            });
-            this.loadData();
-            this.closeEditModal();
+            try {
+                await this.goalsProvider.updateGoal(this.editingGoal.id, {
+                    name: this.editingGoal.name,
+                    targetAmount: this.editingGoal.targetAmount,
+                    savedAmount: this.editingGoal.savedAmount,
+                    deadline: this.editingGoal.deadline
+                });
+                await this.loadData();
+                this.closeEditModal();
+            } catch (error) {
+                console.error('Failed to update goal:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            }
         },
-        
-        showDepositModal(goal: Goal) {
+
+        showDepositModal(goal: SavingsGoal) {
             if (!goal || !goal.id) return;
             this.selectedGoalId = goal.id;
             this.depositAmount = '';
             this.showDepositModalFlag = true;
         },
-        
+
         closeDepositModal() {
             this.showDepositModalFlag = false;
             this.selectedGoalId = null;
             this.depositAmount = '';
         },
-        
-        addDeposit() {
+
+        async addDeposit() {
             if (!this.selectedGoalId || !this.depositAmount || parseFloat(this.depositAmount) <= 0) return;
-            depositToGoal(this.selectedGoalId, parseFloat(this.depositAmount));
-            this.loadData();
-            this.closeDepositModal();
+            try {
+                await this.goalsProvider.addContribution(this.selectedGoalId, parseFloat(this.depositAmount));
+                await this.loadData();
+                this.closeDepositModal();
+            } catch (error) {
+                console.error('Failed to add contribution:', error);
+                if (error instanceof Error) {
+                    alert(error.message);
+                }
+            }
         },
-        
-        showDeleteModal(goal: Goal) {
+
+        showDeleteModal(goal: SavingsGoal) {
             if (!goal || !goal.id) return;
             this.deleteGoalId = goal.id;
             this.showDeleteModalFlag = true;
         },
-        
+
         closeDeleteModal() {
             this.showDeleteModalFlag = false;
             this.deleteGoalId = null;
         },
-        
-        confirmDelete() {
+
+        async confirmDelete() {
             if (this.deleteGoalId) {
-                removeGoal(this.deleteGoalId);
-                this.loadData();
-                this.closeDeleteModal();
+                try {
+                    await this.goalsProvider.deleteGoal(this.deleteGoalId);
+                    await this.loadData();
+                    this.closeDeleteModal();
+                } catch (error) {
+                    console.error('Failed to delete goal:', error);
+                    if (error instanceof Error) {
+                        alert(error.message);
+                    }
+                }
             }
         },
-        
+
         goBack() {
             const frame = Frame.topmost();
             if (frame) {
                 frame.goBack();
             }
         },
-        
+
         preventClose(event: any) {
             event.cancelBubble = true;
         }

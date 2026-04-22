@@ -1,14 +1,14 @@
 <template>
     <Page actionBarHidden="true" backgroundSpanUnderStatusBar="true" class="bg-[#121212]">
         <GridLayout rows="*, auto" columns="*" class="bg-[#121212]">
-            
+
             <ScrollView row="0" col="0">
-                <FlexboxLayout flexDirection="column" justifyContent="flex-start" alignItems="stretch" class="px-4 pt-8 pb-4">
-                    
+                <StackLayout flexDirection="column" justifyContent="flex-start" alignItems="stretch" class="px-4 pt-8 pb-10">
+
                     <Label text="Заполните необходимые поля"
                            class="text-white font-inter font-extrabold text-3xl text-left"
                            textWrap="true" />
-                    
+
                     <StackLayout class="mt-5">
                         <FlexboxLayout flexDirection="row" justifyContent="flex-start" alignItems="center" flexWrap="wrap">
                             <Label class="text-white font-inter font-semibold text-base" text="Чтобы зарегистрироваться в " />
@@ -18,17 +18,17 @@
                     </StackLayout>
 
                     <StackLayout class="mt-6">
-                        <GridLayout rows="auto" columns="16, *" 
+                        <GridLayout rows="auto" columns="16, *"
                                    class="rounded-xl px-4 min-h-14 items-center pt-1"
                                    :class="[
                                        focusedField === 'fullname' ? 'border-[#964BDC] border-5' : 'border-[#121212] border-5',
                                        errors.fullname && touched.fullname ? 'border-[#3D2519] border-5 bg-[#3D2519]' : 'bg-[#252525]'
                                    ]">
-                            
+
                             <Image col="0" src="~/assets/images/name.png" width="14" height="18" class="self-center" />
-                            
+
                             <StackLayout col="1" class="ml-4 py-2">
-                                <Label text="ФИО" 
+                                <Label text="ФИО"
                                        class="font-inter font-semibold text-xs mb-1"
                                        :class="errors.fullname && touched.fullname ? 'text-[#DE6C35]' : 'text-[#8A8A8A]'" />
                                 <TextField v-model="form.fullname"
@@ -52,11 +52,11 @@
                                        focusedField === 'email' ? 'border-[#964BDC] border-5' : 'border-[#121212] border-5',
                                        errors.email && touched.email ? 'border-[#3D2519] border-5 bg-[#3D2519]' : 'bg-[#252525]'
                                    ]">
-                            
+
                             <Image col="0" src="~/assets/images/email.png" width="16" height="12" class="self-center" />
-                            
+
                             <StackLayout col="1" class="ml-4 py-2">
-                                <Label text="E-mail" 
+                                <Label text="E-mail"
                                        class="font-inter font-semibold text-xs mb-1"
                                        :class="errors.email && touched.email ? 'text-[#DE6C35]' : 'text-[#8A8A8A]'" />
                                 <TextField v-model="form.email"
@@ -81,11 +81,11 @@
                                        focusedField === 'password' ? 'border-[#964BDC] border-5' : 'border-[#121212] border-5',
                                        errors.password && touched.password ? 'border-[#3D2519] border-5 bg-[#3D2519]' : 'bg-[#252525]'
                                    ]">
-                            
+
                             <Image col="0" src="~/assets/images/key.png" width="16" height="18" class="self-center" />
-                            
+
                             <StackLayout col="1" class="ml-4 py-2">
-                                <Label text="Пароль" 
+                                <Label text="Пароль"
                                        class="font-inter font-semibold text-xs mb-1"
                                        :class="errors.password && touched.password ? 'text-[#DE6C35]' : 'text-[#8A8A8A]'" />
                                 <TextField v-model="form.password"
@@ -118,11 +118,11 @@
                                        focusedField === 'confirmPassword' ? 'border-[#964BDC] border-5' : 'border-[#121212] border-5',
                                        errors.confirmPassword && touched.confirmPassword ? 'border-[#3D2519] border-5 bg-[#3D2519]' : 'bg-[#252525]'
                                    ]">
-                            
+
                             <Image col="0" src="~/assets/images/key.png" width="16" height="18" class="self-center" />
-                            
+
                             <StackLayout col="1" class="ml-4 py-2">
-                                <Label text="Подтверждение пароля" 
+                                <Label text="Подтверждение пароля"
                                        class="font-inter font-semibold text-xs mb-1"
                                        :class="errors.confirmPassword && touched.confirmPassword ? 'text-[#DE6C35]' : 'text-[#8A8A8A]'" />
                                 <TextField v-model="form.confirmPassword"
@@ -151,16 +151,16 @@
                                class="text-[#DE6C35] font-inter text-xs ml-4 mt-1" />
 
                         <FlexboxLayout flexDirection="row" alignItems="center" class="mt-6">
-                            <GridLayout width="18" height="18" class="mr-3 ml-4"
-                                    :class="[
-                                        isAgreed ? 'bg-[#964BDC] border-[#964BDC]' : 'bg-[#252525] border-[#8A8A8A]',
-                                        'rounded-md border-5 items-center justify-center'
-                                    ]"
-                                    @tap="toggleAgreement">
-                                <Label v-if="isAgreed" text="✓" color="white" fontSize="12" fontWeight="bold" 
-       horizontalAlignment="center" verticalAlignment="center" />
-                            </GridLayout>
-                            
+                            <StackLayout width="24" height="24" flexShrink="0"
+                                        class="mr-3 ml-4 rounded-md items-center justify-center"
+                                        :class="[isAgreed ? 'bg-[#964BDC]' : 'bg-[#252525]']"
+                                        borderWidth="1.5"
+                                        :borderColor="isAgreed ? '#964BDC' : '#8A8A8A'"
+                                        @tap="toggleAgreement">
+                                <Label v-if="isAgreed" text="✓" color="white" fontSize="14" fontWeight="bold"
+                                    horizontalAlignment="center" verticalAlignment="center" />
+                            </StackLayout>
+
                             <FlexboxLayout flexDirection="row" flexWrap="wrap" class="flex-1">
                                 <Label text="Я соглашаюсь "
                                     class="text-white font-inter font-semibold text-xs" />
@@ -173,7 +173,7 @@
                             :text="errors.agreement"
                             class="text-[#DE6C35] font-inter text-xs ml-4 mt-1" />
                     </StackLayout>
-                </FlexboxLayout>
+                </StackLayout>
             </ScrollView>
 
             <GridLayout row="1" col="0" rows="auto" columns="*" class="px-4 pb-4">
@@ -187,7 +187,7 @@
                     </FlexboxLayout>
 
                     <ActivityIndicator v-if="isLoading" :busy="true" color="#964BDC" class="mb-4" />
-                    
+
                     <Button v-else
                            :text="'Зарегистрироваться'"
                            :class="['h-14 rounded-xl font-inter font-semibold text-base text-white w-full',
@@ -377,7 +377,7 @@ export default defineComponent({
             Object.keys(this.touched).forEach(key => {
                 this.touched[key as keyof RegistrationTouched] = true;
             });
-            
+
             const validationErrors = RegistrationValidator.validateForm(this.form, this.isAgreed);
             this.errors = { ...validationErrors };
 
