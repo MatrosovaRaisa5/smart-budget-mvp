@@ -20,9 +20,17 @@
                         <Image col="1" src="~/assets/images/filter.png" width="20" height="20" class="ml-4 self-center" @tap="showFilterModal" />
                     </GridLayout>
 
-                    <FlexboxLayout v-if="activeFilters.length > 0" flexDirection="row" flexWrap="wrap" class="mb-4">
+                    <FlexboxLayout v-if="activeFilters.length > 0 || dateFromFilter || dateToFilter" flexDirection="row" flexWrap="wrap" class="mb-4">
                         <GridLayout v-for="filter in activeFilters" :key="filter" rows="auto" columns="auto, auto" class="bg-[#1E1D2E] rounded-2xl px-3 py-1 mr-2 mb-2 items-center" @tap="removeFilter(filter)">
                             <Label col="0" :text="filter" class="text-white font-inter font-semibold text-xs" />
+                            <Image col="1" src="~/assets/images/close.png" width="8" height="8" class="ml-2" />
+                        </GridLayout>
+                        <GridLayout v-if="dateFromFilter" rows="auto" columns="auto, auto" class="bg-[#1E1D2E] rounded-2xl px-3 py-1 mr-2 mb-2 items-center" @tap="removeDateFromFilter">
+                            <Label col="0" :text="'с ' + dateFromFilter" class="text-white font-inter font-semibold text-xs" />
+                            <Image col="1" src="~/assets/images/close.png" width="8" height="8" class="ml-2" />
+                        </GridLayout>
+                        <GridLayout v-if="dateToFilter" rows="auto" columns="auto, auto" class="bg-[#1E1D2E] rounded-2xl px-3 py-1 mr-2 mb-2 items-center" @tap="removeDateToFilter">
+                            <Label col="0" :text="'по ' + dateToFilter" class="text-white font-inter font-semibold text-xs" />
                             <Image col="1" src="~/assets/images/close.png" width="8" height="8" class="ml-2" />
                         </GridLayout>
                     </FlexboxLayout>
@@ -112,7 +120,25 @@
                 <StackLayout class="bg-[#1E1E1E] rounded-3xl p-5 w-80" @tap="preventClose">
                     <Label text="Фильтры" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
 
-                    <ScrollView height="auto" maxHeight="60%">
+                    <Label text="По дате" class="text-[#8A8A8A] font-inter font-semibold text-sm mb-2" />
+
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-3" :class="dateFromFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusDateFrom">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Дата от" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="dateFromField" v-model="tempDateFrom" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateFromFocused = true" @blur="dateFromFocused = false" />
+                        </StackLayout>
+                    </GridLayout>
+
+                    <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="dateToFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusDateTo">
+                        <StackLayout class="ml-1 py-1 w-full">
+                            <Label text="Дата до" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <TextField ref="dateToField" v-model="tempDateTo" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="dateToFocused = true" @blur="dateToFocused = false" />
+                        </StackLayout>
+                    </GridLayout>
+
+                    <Label text="По категориям" class="text-[#8A8A8A] font-inter font-semibold text-sm mt-2 mb-2" />
+                    
+                    <ScrollView height="200" class="mb-4">
                         <StackLayout>
                             <GridLayout v-for="category in availableCategories" :key="category.id" rows="auto" columns="auto, *" class="mb-3 items-center" @tap="toggleFilter(category)">
                                 <GridLayout col="0" width="20" height="20" class="rounded-full border-5 mr-3 items-center justify-center" :class="isFilterActive(category.name) ? 'border-[#964BDC] bg-[#964BDC]' : 'border-[#8A8A8A]'">
@@ -123,7 +149,7 @@
                         </StackLayout>
                     </ScrollView>
 
-                    <Button text="Применить" class="bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-4" @tap="applyFilters" />
+                    <Button text="Применить" class="bg-[#964BDC] text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-2" @tap="applyFilters" />
                 </StackLayout>
             </GridLayout>
 
@@ -141,10 +167,10 @@
                     </GridLayout>
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="amountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusAmount">
-                        <StackLayout class="ml-1 py-1 w-full">
+                        <StackLayout class="ml-1 py-1">
                             <Label text="Сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
+                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
@@ -218,6 +244,12 @@ export default defineComponent({
             searchText: '',
             searchFocused: false,
             activeFilters: [] as string[],
+            dateFromFilter: '',
+            dateToFilter: '',
+            tempDateFrom: '',
+            tempDateTo: '',
+            dateFromFocused: false,
+            dateToFocused: false,
             availableCategories: [] as Category[],
             isLoading: false,
             isAdding: false,
@@ -262,6 +294,34 @@ export default defineComponent({
         await this.loadData();
     },
     methods: {
+        focusDateFrom() {
+            this.dateFromFocused = true;
+            setTimeout(() => {
+                const field = this.$refs.dateFromField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
+        },
+        focusDateTo() {
+            this.dateToFocused = true;
+            setTimeout(() => {
+                const field = this.$refs.dateToField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
+        },
+        removeDateFromFilter() {
+            this.dateFromFilter = '';
+            this.tempDateFrom = '';
+            this.applyFiltersAndSearch();
+        },
+        removeDateToFilter() {
+            this.dateToFilter = '';
+            this.tempDateTo = '';
+            this.applyFiltersAndSearch();
+        },
         getTodayDate(): string {
             const today = new Date();
             const day = String(today.getDate()).padStart(2, '0');
@@ -346,6 +406,25 @@ export default defineComponent({
                 );
             }
 
+            if (this.dateFromFilter) {
+                const [day, month, year] = this.dateFromFilter.split('.').map(Number);
+                const fromDate = new Date(year, month - 1, day);
+                filtered = filtered.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate >= fromDate;
+                });
+            }
+
+            if (this.dateToFilter) {
+                const [day, month, year] = this.dateToFilter.split('.').map(Number);
+                const toDate = new Date(year, month - 1, day);
+                toDate.setHours(23, 59, 59);
+                filtered = filtered.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate <= toDate;
+                });
+            }
+
             this.filteredTransactions = filtered;
             this.groupedTransactions = this.groupTransactionsByDate(this.filteredTransactions);
         },
@@ -408,6 +487,8 @@ export default defineComponent({
         },
 
         showFilterModal() {
+            this.tempDateFrom = this.dateFromFilter;
+            this.tempDateTo = this.dateToFilter;
             this.showFilterModalFlag = true;
         },
 
@@ -429,6 +510,8 @@ export default defineComponent({
         },
 
         applyFilters() {
+            this.dateFromFilter = this.tempDateFrom;
+            this.dateToFilter = this.tempDateTo;
             this.closeFilterModal();
             this.applyFiltersAndSearch();
         },
@@ -494,17 +577,32 @@ export default defineComponent({
 
         focusName() {
             this.nameFocused = true;
-            (this.$refs.nameField as any).nativeView.focus();
+            setTimeout(() => {
+                const field = this.$refs.nameField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
         },
 
         focusAmount() {
             this.amountFocused = true;
-            (this.$refs.amountField as any).nativeView.focus();
+            setTimeout(() => {
+                const field = this.$refs.amountField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
         },
 
         focusDate() {
             this.dateFocused = true;
-            (this.$refs.dateField as any).nativeView.focus();
+            setTimeout(() => {
+                const field = this.$refs.dateField as any;
+                if (field && field.nativeView) {
+                    field.nativeView.focus();
+                }
+            }, 100);
         },
 
         showCategorySelector() {

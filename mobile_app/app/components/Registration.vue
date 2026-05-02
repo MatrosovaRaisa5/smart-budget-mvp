@@ -151,14 +151,16 @@
                                class="text-[#DE6C35] font-inter text-xs ml-4 mt-1" />
 
                         <FlexboxLayout flexDirection="row" alignItems="center" class="mt-6">
-                            <StackLayout width="24" height="24" flexShrink="0"
+                            <StackLayout width="20" height="20" flexShrink="0"
                                         class="mr-3 ml-4 rounded-md items-center justify-center"
                                         :class="[isAgreed ? 'bg-[#964BDC]' : 'bg-[#252525]']"
                                         borderWidth="1.5"
                                         :borderColor="isAgreed ? '#964BDC' : '#8A8A8A'"
                                         @tap="toggleAgreement">
-                                <Label v-if="isAgreed" text="✓" color="white" fontSize="14" fontWeight="bold"
-                                    horizontalAlignment="center" verticalAlignment="center" />
+                                        <Label v-if="isAgreed" text="✓" color="white" fontSize="10" 
+                                                textAlignment="center" 
+                                                width="100%" height="100%"
+                                                verticalAlignment="center" />
                             </StackLayout>
 
                             <FlexboxLayout flexDirection="row" flexWrap="wrap" class="flex-1">
@@ -248,6 +250,7 @@ import {
     RegistrationTouched
 } from '../models/form.types';
 import { RegistrationValidator } from '../validators/registration.validator';
+import { Utils } from '@nativescript/core';
 
 export default defineComponent({
     data() {
@@ -439,7 +442,8 @@ export default defineComponent({
         },
 
         openPrivacyPolicy(): void {
-            console.log('Open privacy policy');
+            const pdfUrl = 'https://drive.google.com/file/d/1-Mbl0u1MSSMmUp4NPYBpOO97QkKmOjkz/view?usp=sharing';
+            Utils.openUrl(pdfUrl);
         },
 
         goToLogin(): void {

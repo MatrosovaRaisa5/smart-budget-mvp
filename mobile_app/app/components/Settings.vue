@@ -149,14 +149,15 @@
                     </GridLayout>
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="amountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusAmount">
-                        <StackLayout class="ml-1 py-1 w-full">
+                        <StackLayout class="ml-1 py-1">
                             <Label text="Сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
+                                <TextField ref="amountField" v-model="displayAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="amountFocused = true" @blur="amountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
                     </GridLayout>
+
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="dateFocused ? 'border-[#964BDC] border-5' : dateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusDate">
                         <StackLayout class="ml-1 py-1 w-full">

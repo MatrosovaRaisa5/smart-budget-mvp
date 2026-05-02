@@ -19,7 +19,7 @@
                                 <Button text="Действие" class="bg-[#4AC13D] text-[#121212] font-inter font-semibold text-xs pl-5 pr-5 h-8 rounded-3xl px-3" @tap="showActionModal(goal)" />
                             </FlexboxLayout>
 
-                            <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculateMonthly(goal)) + ' ₽'" class="text-white font-inter font-semibold text-sm mb-3" textWrap="true" />
+                            <Label :text="'Рекомендуемый ' + getPaymentFrequency(goal) + ' взнос ' + formatAmount(calculateMonthly(goal)) + ' ₽'" class="text-white font-inter font-semibold text-sm mb-3" textWrap="true" />
 
                             <GridLayout rows="auto" columns="*" height="4" class="rounded-full overflow-hidden mb-3">
                                 <GridLayout col="0" backgroundColor="#454545" height="4" width="100%" borderRadius="2" />
@@ -77,7 +77,7 @@
                         <StackLayout class="ml-1 py-1 w-full">
                             <Label text="Сколько хотите накопить" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="targetAmountField" v-model="displayTargetAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="targetAmountFocused = true" @blur="targetAmountFocused = false" />
+                                <TextField ref="targetAmountField" v-model="displayTargetAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="targetAmountFocused = true" @blur="targetAmountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
@@ -95,13 +95,13 @@
                         <StackLayout class="ml-1 py-1 w-full">
                             <Label text="Текущая накопленная сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="currentAmountField" v-model="displayCurrentAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="currentAmountFocused = true" @blur="currentAmountFocused = false" />
+                                <TextField ref="currentAmountField" v-model="displayCurrentAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="currentAmountFocused = true" @blur="currentAmountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
                     </GridLayout>
 
-                    <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculatedMonthly) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs mb-4" textWrap="true" />
+                    <Label :text="'Рекомендуемый ' + getPaymentFrequencyByDate(newGoal.deadline) + ' взнос ' + formatAmount(calculatedMonthly) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs mb-4" textWrap="true" />
 
                     <ActivityIndicator v-if="isAdding" :busy="true" color="#964BDC" class="my-4" />
 
@@ -125,10 +125,10 @@
                     </GridLayout>
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="editTargetAmountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusEditTargetAmount">
-                        <StackLayout class="ml-1 py-1 w-full">
+                        <StackLayout class="ml-1 py-1">
                             <Label text="Сколько хотите накопить" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="editTargetAmountField" v-model="displayEditTargetAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="editTargetAmountFocused = true" @blur="editTargetAmountFocused = false" />
+                                <TextField ref="editTargetAmountField" v-model="displayEditTargetAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="editTargetAmountFocused = true" @blur="editTargetAmountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
@@ -143,16 +143,16 @@
                     <Label v-if="editDateError" :text="editDateError" class="text-[#FF0000] font-inter text-xs ml-1 mt-1 mb-2" />
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="editCurrentAmountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusEditCurrentAmount">
-                        <StackLayout class="ml-1 py-1 w-full">
+                        <StackLayout class="ml-1 py-1">
                             <Label text="Текущая накопленная сумма" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="editCurrentAmountField" v-model="displayEditCurrentAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="editCurrentAmountFocused = true" @blur="editCurrentAmountFocused = false" />
+                                <TextField ref="editCurrentAmountField" v-model="displayEditCurrentAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="editCurrentAmountFocused = true" @blur="editCurrentAmountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
                     </GridLayout>
 
-                    <Label :text="'Рекомендуемый ежемесячный взнос ' + formatAmount(calculateMonthly(editingGoal)) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs mb-4" textWrap="true" />
+                    <Label :text="'Рекомендуемый ' + getPaymentFrequencyByDate(editingGoal.deadline) + ' взнос ' + formatAmount(calculateMonthly(editingGoal)) + ' ₽'" class="text-[#8A8A8A] font-inter font-normal text-xs mb-4" textWrap="true" />
 
                     <Button text="Сохранить" :class="['text-white font-inter font-semibold text-sm h-12 rounded-2xl w-full mt-2', isEditGoalValid ? 'bg-[#964BDC]' : 'bg-[#969696]']" :isEnabled="isEditGoalValid" @tap="updateGoal" />
 
@@ -167,10 +167,10 @@
                     <Label text="Пополнение" class="text-white font-inter font-extrabold text-xl text-left mb-4" />
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="depositAmountFocused ? 'border-[#964BDC] border-5' : 'border-[#262626] border-5'" @tap="focusDepositAmount">
-                        <StackLayout class="ml-1 py-1 w-full">
+                        <StackLayout class="ml-1 py-1">
                             <Label text="На сколько хотите пополнить" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <FlexboxLayout flexDirection="row" alignItems="center">
-                                <TextField ref="depositAmountField" v-model="displayDepositAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0 flex-1" keyboardType="number" @focus="depositAmountFocused = true" @blur="depositAmountFocused = false" />
+                                <TextField ref="depositAmountField" v-model="displayDepositAmount" hint="0" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" keyboardType="number" @focus="depositAmountFocused = true" @blur="depositAmountFocused = false" />
                                 <Label text="₽" class="text-white font-inter font-medium text-sm ml-1" />
                             </FlexboxLayout>
                         </StackLayout>
@@ -322,6 +322,21 @@ export default defineComponent({
         await this.loadData();
     },
     methods: {
+        getPaymentFrequency(goal: SavingsGoal): string {
+            const months = this.getMonthsDifference(goal.deadline);
+            if (months <= 0) return 'ежедневный';
+            if (months < 1) return 'ежедневный';
+            if (months === 1) return 'ежемесячный';
+            return 'ежемесячный';
+        },
+
+        getPaymentFrequencyByDate(dateString: string): string {
+            const months = this.getMonthsDifference(dateString);
+            if (months <= 0) return 'ежедневный';
+            if (months < 1) return 'ежедневный';
+            return 'ежемесячный';
+        },
+
         showActionModal(goal: SavingsGoal) {
             this.selectedActionGoal = goal;
             this.showActionModalFlag = true;
@@ -442,7 +457,6 @@ export default defineComponent({
             this.isLoading = true;
             try {
                 let fetchedGoals = await this.goalsProvider.getGoals();
-                // Преобразуем deadline из ISO (ГГГГ-ММ-ДД) в ДД.ММ.ГГГГ для единого формата
                 this.goals = fetchedGoals.map(goal => ({
                     ...goal,
                     deadline: this.convertToDisplayDate(goal.deadline)
@@ -595,7 +609,6 @@ export default defineComponent({
 
         showEditModal(goal: SavingsGoal) {
             if (!goal || !goal.id) return;
-            // Копируем цель, deadline уже в ДД.ММ.ГГГГ после преобразования в loadData
             this.editingGoal = { ...goal };
             this.showEditModalFlag = true;
         },
