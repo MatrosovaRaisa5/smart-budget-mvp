@@ -136,7 +136,7 @@
 
                     <GridLayout rows="auto" class="bg-[#262626] rounded-2xl px-4 min-h-14 items-center pt-1 mb-4" :class="editDateFocused ? 'border-[#964BDC] border-5' : editDateError ? 'border-[#FF0000] border-5' : 'border-[#262626] border-5'" @tap="focusEditDate">
                         <StackLayout class="ml-1 py-1 w-full">
-                            <Label text="Дата" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
+                            <Label text="Копите до" class="text-[#8A8A8A] font-inter font-semibold text-xs" />
                             <TextField ref="editDateField" v-model="editingGoal.deadline" hint="ДД.ММ.ГГГГ" hintColor="#BEBEBE" class="text-white font-inter font-medium text-sm bg-transparent p-0" @focus="editDateFocused = true" @blur="validateEditDate" />
                         </StackLayout>
                     </GridLayout>
