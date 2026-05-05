@@ -529,9 +529,9 @@ export default defineComponent({
         },
 
         getTransactionWord(count: number): string {
-            if (count === 1) return 'транзакция';
-            if (count >= 2 && count <= 4) return 'транзакции';
-            return 'транзакций';
+            if (count === 1) return 'трата';
+            if (count >= 2 && count <= 4) return 'траты';
+            return 'трат';
         },
 
         getStatusBarColor(percent: number): string {

@@ -150,7 +150,7 @@
                                :text="errors.confirmPassword"
                                class="text-[#DE6C35] font-inter text-xs ml-4 mt-1" />
 
-                        <FlexboxLayout flexDirection="row" alignItems="center" class="mt-6">
+                        <FlexboxLayout flexDirection="row" alignItems="flex-start" class="mt-6">
                             <StackLayout width="20" height="20" flexShrink="0"
                                         class="mr-3 ml-4 rounded-md items-center justify-center"
                                         :class="[isAgreed ? 'bg-[#964BDC]' : 'bg-[#252525]']"
@@ -163,11 +163,12 @@
                                                 verticalAlignment="center" />
                             </StackLayout>
 
-                            <FlexboxLayout flexDirection="row" flexWrap="wrap" class="flex-1">
+                            <FlexboxLayout flexDirection="row" flexWrap="wrap" class="flex-1" flexShrink="1">
                                 <Label text="Я соглашаюсь "
                                     class="text-white font-inter font-semibold text-xs" />
                                 <Label text="с политикой обработки персональных данных"
                                     class="text-[#964BDC] font-inter font-semibold text-xs"
+                                    textWrap="true"
                                     @tap="openPrivacyPolicy" />
                             </FlexboxLayout>
                         </FlexboxLayout>

@@ -37,7 +37,7 @@
 
                     <StackLayout class="bg-[#1E1E1E] rounded-3xl px-4 pt-5 pb-4 mb-20">
                         <FlexboxLayout flexDirection="row" justifyContent="space-between" alignItems="center" class="mb-4">
-                            <Label text="Распределение бюджета" class="text-white font-inter font-semibold text-xl" />
+                            <Label text="План бюджета" class="text-white font-inter font-semibold text-xl" />
                             <Image src="~/assets/images/plus.png" width="20" height="20" @tap="addNewCategoryFromPlus" />
                         </FlexboxLayout>
 
